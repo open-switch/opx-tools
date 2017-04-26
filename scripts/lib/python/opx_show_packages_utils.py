@@ -1,13 +1,19 @@
 #!/usr/bin/python
+import sys
 import json
 import opx_python_common_utils
 
 cfg_file = "/etc/opx/manifest.json"
 
 def parse_manifest():
-    with open('/etc/opx/manifest.json', 'r') as fd:
-        data = json.load(fd)
-    return data
+    try:
+        with open(cfg_file, 'r') as fd:
+            data = json.load(fd)
+        return data
+    except Exception:
+        print "Config file not present"
+        sys.exit(1)
+
 
 def get_dpkg_info(packages_cfg_info):
 
