@@ -18,23 +18,21 @@ def parse_manifest():
 def get_dpkg_info(packages_cfg_info):
 
     packages_info = {}
+    cache = apt.Cache()
     for elem in packages_cfg_info:        
         try:            
             package_name_cfg = elem['name']
             package_version_cfg = elem['version']
+
+            # Search the Cache for Package Name/Version information
+            for pkg in cache:
+                if pkg.is_installed:
+                     if package_name_cfg == pkg.name:
+                        n = package_name_cfg
+                        v = pkg.installed.version
+
+            tmp_dict = {'Name': n, 'Version': v}
             
-            cmd = "dpkg -s " + package_name_cfg
-            ret = opx_python_common_utils.run_cmd_get_output([cmd])
-            
-            tmp_dict = {}
-            for l in ret:
-                if l:
-                    try:
-                        (k,v) = l.split(':',1)
-                    except Exception:
-                        pass
-                    
-                    tmp_dict[k] = v
             # Fill the original version from the cfg file
             tmp_dict['orig_version'] =  package_version_cfg
             

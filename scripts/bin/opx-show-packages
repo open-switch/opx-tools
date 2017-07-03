@@ -4,10 +4,11 @@ import opx_show_packages_utils
 
 def pretty_print(packages_info):
     try:
-        print "%-30s %-20s %-20s %-20s %-60s "  % ('Name','Original Version', 'Current Version', 'Altered' , 'Description')
-        print "="*160
+        print "%-30s %-20s %-20s %-20s "  % ('Name','Original Version', 'Current Version', 'Altered' )
+        print "="*100
         for k in packages_info:
-            print "\n%-30s %-20s %-20s %-20s %-60s "  % (k,packages_info[k]['orig_version'], packages_info[k]['Version'], packages_info[k]['Altered'], packages_info[k]['Description'])
+
+            print "\n%-30s %-20s %-20s %-20s "  % (k,packages_info[k]['orig_version'], packages_info[k]['Version'], packages_info[k]['Altered'])
     except Exception:
         print "Error in getting packages information"
 
@@ -17,7 +18,7 @@ def main():
 
     packages_info = opx_show_packages_utils.get_packages_info()
     pretty_print(packages_info)
-    
+
 
 if __name__ == "__main__":
     main()

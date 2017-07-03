@@ -1,0 +1,14 @@
+Source: opx-platform-tools
+Section: net
+Priority: optional
+Maintainer: Dell EMC <ops-dev@lists.openswitch.net>
+Build-Depends:
+ debhelper (>= 9), dh-autoreconf, exuberant-ctags 
+Standards-Version: 3.9.3
+Vcs-Browser: https://github.com/open-switch/opx-platform-tools
+Vcs-Git: https://github.com/open-switch/opx-platform-tools.git
+
+Package: opx-platform-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-apt
+Description: Openswitch platform tools which will be used in OPX Package Management
