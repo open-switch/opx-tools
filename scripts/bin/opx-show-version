@@ -1,0 +1,46 @@
+#!/usr/bin/python
+import sys
+import opx_show_packages_utils
+import opx_show_system_status
+
+opx_version_file = "/etc/OPX-release-version"
+
+def parse_file():
+    with open(opx_version_file, 'r') as fd:
+        data = fd.readlines()
+    return data
+
+def main():
+    # Print version information
+    info = parse_file()
+    for l in info:
+        print l
+
+    # Print System Uptime
+    uptime = opx_show_system_status.get_system_uptime()
+    if uptime:
+        print "SYSTEM_UPTIME=", uptime
+
+    # Print System State
+    sys_state = opx_show_system_status.get_system_state()
+    print "\nSYSTEM_STATE=", sys_state
+
+    # Print Upgraded Packages
+    package_list = opx_show_packages_utils.get_upgraded_packages()
+    if len(package_list) == 0:
+        print "\nUPGRADED_PACKAGES=no"
+    else:
+        print "\nUPGRADED_PACKAGES=yes"
+
+    # Print Altered Packages
+    package_list = opx_show_packages_utils.get_altered_packages()
+    if len(package_list) == 0:
+        print "\nALTERED_PACKAGES=no"
+    else:
+        print "\nALTERED_PACKAGES=yes"
+
+
+if __name__ == "__main__":
+    main()
+    sys.exit(0)
+
