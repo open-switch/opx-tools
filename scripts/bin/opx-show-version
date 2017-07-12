@@ -14,7 +14,7 @@ def main():
     # Print version information
     info = parse_file()
     for l in info:
-        print l
+        print l,
 
     # Print System Uptime
     uptime = opx_show_system_status.get_system_uptime()
@@ -23,21 +23,21 @@ def main():
 
     # Print System State
     sys_state = opx_show_system_status.get_system_state()
-    print "\nSYSTEM_STATE=", sys_state
+    print "SYSTEM_STATE=", sys_state
 
     # Print Upgraded Packages
     package_list = opx_show_packages_utils.get_upgraded_packages()
     if len(package_list) == 0:
-        print "\nUPGRADED_PACKAGES=no"
+        print "UPGRADED_PACKAGES=no"
     else:
-        print "\nUPGRADED_PACKAGES=yes"
+        print "UPGRADED_PACKAGES=yes"
 
     # Print Altered Packages
     package_list = opx_show_packages_utils.get_altered_packages()
     if len(package_list) == 0:
-        print "\nALTERED_PACKAGES=no"
+        print "ALTERED_PACKAGES=no"
     else:
-        print "\nALTERED_PACKAGES=yes"
+        print "ALTERED_PACKAGES=yes"
 
 
 if __name__ == "__main__":

@@ -21,9 +21,9 @@ def main():
         # Print Corrupted packages
         package_list = opx_show_packages_utils.get_altered_packages()
         if len(package_list) == 0:
-            print "No Corrupted Package"
+            print "No Modified Package"
         else:
-            print "\nCorrupted Packages:"
+            print "Modified Packages:"
             for i in package_list:
                 print i
         
