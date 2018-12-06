@@ -201,6 +201,10 @@ def port_range_str_to_port_list(s, port_types):
     return result
 
 
+def cjoin(s1, sep, s2):
+    return s2 if s1 == '' else s1 + sep + s2
+
+
 def _attr_val_to_str(val, fmt=None, map=None, func=None):
     if map is not None:
         val = map.get(val, 'UNKNOWN')
@@ -214,12 +218,8 @@ def _attr_val_to_str(val, fmt=None, map=None, func=None):
 def attr_val_to_str(val, fmt=None, map=None, func=None):
     if type(val) == list:
         result = ''
-        f = False
         for x in val:
-            if f:
-                result += ' '
-            result += _attr_val_to_str(x, fmt, map, func)
-            f = True
+            result = cjoin(result, ' ', _attr_val_to_str(x, fmt, map, func))
         return result
     return _attr_val_to_str(val, fmt, map, func)
     
@@ -273,14 +273,29 @@ def print_section(lvl, heading, li, heading_width=None):
 
 
 def print_summary_line(r, fs):
-    i = 0
-    n = len(fs)
-    while  i < n:
-        if i >  0:
-            sys.stdout.write(' | ')
-        sys.stdout.write(('{:' + fs[i] + '}').format(r[i]))
-        i += 1
-    print
+    ncol = len(fs)
+    while reduce(lambda u, v: u + v, map(lambda x: len(x), r)) > 0:
+        i = 0
+        while  i < ncol:
+            if i >  0:
+                sys.stdout.write(' | ')
+            n = fs[i]
+            s = r[i]
+            if len(s) <= n:
+                r[i] = ''
+            else:
+                li = s.split(' ')
+                s = ''
+                while True:
+                    ss = cjoin(s, ' ', li[0])
+                    if len(ss) > n:
+                        break
+                    s = ss
+                    li.pop(0)
+                r[i] = ' '.join(li)
+            sys.stdout.write(('{:' + str(n) + '}').format(s))
+            i += 1
+        print
         
 
 ###########################################################################
@@ -312,8 +327,17 @@ def print_summary(headings, values, outmaps=None, funcs=None):
                 fs[j] = n
             j += 1
         i += 1
-    w = reduce(lambda x, y: x + y, fs) + 3 * (nf - 1)
-    fs = map(lambda x: str(x), fs)
+    while True:
+        w = reduce(lambda x, y: x + y, fs) + 3 * (nf - 1)
+        if w <= 80:
+            break
+        fsmax = max(fs)
+        li = fs
+        i = None
+        while fsmax in li:
+            i = li.index(fsmax)
+            li = li[(i + 1):]
+        fs[i] /= 2
     print_summary_line(headings, fs)
     print w * '-'
     for r in a:
