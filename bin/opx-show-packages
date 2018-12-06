@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import opx_tools.opx_show_packages_utils as opx_show_packages_utils
+
+def pretty_print(packages_info):
+    try:
+        print "%-30s %-20s %-20s %-20s %-60s "  % ('Name','Original Version', 'Current Version', 'Altered' , 'Description')
+        print "="*160
+        for k in packages_info:
+            print "\n%-30s %-20s %-20s %-20s %-60s "  % (k,packages_info[k]['orig_version'], packages_info[k]['Version'], packages_info[k]['Altered'], packages_info[k]['Description'])
+    except Exception:
+        print "Error in getting packages information"
+
+
+
+def main():
+
+    packages_info = opx_show_packages_utils.get_packages_info()
+    pretty_print(packages_info)
+    
+
+if __name__ == "__main__":
+    main()
+    sys.exit(0)
+

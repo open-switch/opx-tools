@@ -1,0 +1,345 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import argparse
+
+from opx_tools.opx_config_utils import *
+
+
+parser = argparse.ArgumentParser(description='Show interface statistics counters')
+parser.add_argument('--port',    type=str,            help='List of ports')
+parser.add_argument('--nonzero', action='store_true', help='Show only non-zero counters')
+args = parser.parse_args()
+
+cntrs = [Struct(heading='Alignment errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/alignment-errors'
+         ),
+         Struct(heading='Carrier sense errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/carrier-sense-errors'
+         ),
+         Struct(heading='Deferred transmissions',
+                attr='dell-if/if/interfaces-state/interface/statistics/deferred-transmissions'
+         ),
+         Struct(heading='ECN marked packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ecn-marked-packets'
+         ),
+         Struct(heading='Ethernet broadcast packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-broadcast-pkts'
+         ),
+         Struct(heading='Ethernet collisions',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-collisions'
+         ),
+         Struct(heading='Ethernet CRC align errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-crc-align-errors'
+         ),
+         Struct(heading='Ethernet drop events',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-drop-events'
+         ),
+         Struct(heading='Ethernet fragments',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-fragments'
+         ),
+         Struct(heading='Ethernet in packets (64 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-64-octets'
+         ),
+         Struct(heading='Ethernet in packets (65 to 127 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-65-to-127-octets'
+         ),
+         Struct(heading='Ethernet in packets (128 to 255 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-128-to-255-octets'
+         ),
+         Struct(heading='Ethernet in packets (256 to 511 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-256-to-511-octets'
+         ),
+         Struct(heading='Ethernet in packets (512 to 1023 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-512-to-1023-octets'
+         ),
+         Struct(heading='Ethernet in packets (1024 to 1518 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-1024-to-1518-octets'
+         ),
+         Struct(heading='Ethernet in packets (1519 to 2047 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-1519-to-2047-octets'
+         ),
+         Struct(heading='Ethernet in packets (2048 to 4095 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-2048-to-4095-octets'
+         ),
+         Struct(heading='Ethernet in packets (4096 to 9216 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-in-pkts-4096-to-9216-octets'
+         ),
+         Struct(heading='Ethernet jabbers',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-jabbers'
+         ),
+         Struct(heading='Ethernet multicast packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-multicast-pkts'
+         ),
+         Struct(heading='Ethernet octets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-octets'
+         ),
+         Struct(heading='Ethernet out packets (64 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-64-octets'
+         ),
+         Struct(heading='Ethernet out packets (65 to 127 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-65-to-127-octets'
+         ),
+         Struct(heading='Ethernet out packets (128 to 255 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-128-to-255-octets'
+         ),
+         Struct(heading='Ethernet out packets (256 to 511 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-256-to-511-octets'
+         ),
+         Struct(heading='Ethernet out packets (512 to 1023 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-512-to-1023-octets'
+         ),
+         Struct(heading='Ethernet out packets (1024 to 1518 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-1024-to-1518-octets'
+         ),
+         Struct(heading='Ethernet out packets (1519 to 2047 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-1519-to-2047-octets'
+         ),
+         Struct(heading='Ethernet out packets (2048 to 4095 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-2048-to-4095-octets'
+         ),
+         Struct(heading='Ethernet out packets (4096 to 9216 octets)',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-out-pkts-4096-to-9216-octets'
+         ),
+         Struct(heading='Ethernet oversize packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-oversize-pkts'
+         ),
+         Struct(heading='Ethernet packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-pkts'
+         ),
+         Struct(heading='Ethernet rx no errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-rx-no-errors'
+         ),
+         Struct(heading='Ethernet rx oversize packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-rx-oversize-pkts'
+         ),
+         Struct(heading='Ethernet tx no errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-tx-no-errors'
+         ),
+         Struct(heading='Ethernet tx oversize packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-tx-oversize-pkts'
+         ),
+         Struct(heading='Ethernet undersize packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ether-undersize-pkts'
+         ),
+         Struct(heading='Excessive collisions',
+                attr='dell-if/if/interfaces-state/interface/statistics/excessive-collisions'
+         ),
+         Struct(heading='FCS errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/fcs-errors'
+         ),
+         Struct(heading='Frame too long',
+                attr='dell-if/if/interfaces-state/interface/statistics/frame-too-long'
+         ),
+         Struct(heading='Green discard dropped packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/green-discard-dropped-packets'
+         ),
+         Struct(heading='In broadcast packets',
+                attr='if/interfaces-state/interface/statistics/in-broadcast-pkts'
+         ),
+         Struct(heading='In discards',
+                attr='if/interfaces-state/interface/statistics/in-discards'
+         ),
+         Struct(heading='In errors',
+                attr='if/interfaces-state/interface/statistics/in-errors'
+         ),
+         Struct(heading='In multicast packets',
+                attr='if/interfaces-state/interface/statistics/in-multicast-pkts'
+         ),
+         Struct(heading='In octets',
+                attr='if/interfaces-state/interface/statistics/in-octets'
+         ),
+         Struct(heading='In unicast packets',
+                attr='if/interfaces-state/interface/statistics/in-unicast-pkts'
+         ),
+         Struct(heading='In unknown opcodes',
+                attr='dell-if/if/interfaces-state/interface/statistics/in-unknown-opcodes'
+         ),
+         Struct(heading='In unknown protos',
+                attr='if/interfaces-state/interface/statistics/in-unknown-protos'
+         ),
+         Struct(heading='Internal mac receive errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/internal-mac-receive-errors'
+         ),
+         Struct(heading='Internal mac transmit errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/internal-mac-transmit-errors'
+         ),
+         Struct(heading='IP in discards',
+                attr='dell-if/if/interfaces-state/interface/statistics/ip-in-discards'
+         ),
+         Struct(heading='IP in forw datagrams',
+                attr='dell-if/if/interfaces-state/interface/statistics/ip-in-forw-datagrams'
+         ),
+         Struct(heading='IP in hdr errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/ip-in-hdr-errors'
+         ),
+         Struct(heading='IP in receives',
+                attr='dell-if/if/interfaces-state/interface/statistics/ip-in-receives'
+         ),
+         Struct(heading='Ipv6 in addr errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-addr-errors'
+         ),
+         Struct(heading='IPv6 in discards',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-discards'
+         ),
+         Struct(heading='IPv6 in hdr errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-hdr-errors'
+         ),
+         Struct(heading='IPv6 in mcast packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-mcast-pkts'
+         ),
+         Struct(heading='IPv6 in receives',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-receives'
+         ),
+         Struct(heading='IPv6 out discards',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-out-discards'
+         ),
+         Struct(heading='IPv6 out forw datagrams',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-out-forw-datagrams'
+         ),
+         Struct(heading='IPv6 out mcast packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/ipv6-out-mcast-pkts'
+         ),
+         Struct(heading='Late collisions',
+                attr='dell-if/if/interfaces-state/interface/statistics/late-collisions'
+         ),
+         Struct(heading='Multiple colision frames',
+                attr='dell-if/if/interfaces-state/interface/statistics/multiple-colision-frames'
+         ),
+         Struct(heading='Out broadcast packets',
+                attr='if/interfaces-state/interface/statistics/out-broadcast-pkts'
+         ),
+         Struct(heading='Out discards',
+                attr='if/interfaces-state/interface/statistics/out-discards'
+         ),
+         Struct(heading='Out errors',
+                attr='if/interfaces-state/interface/statistics/out-errors'
+         ),
+         Struct(heading='Out multicast packets',
+                attr='if/interfaces-state/interface/statistics/out-multicast-pkts'
+         ),
+         Struct(heading='Out octets',
+                attr='if/interfaces-state/interface/statistics/out-octets'
+         ),
+         Struct(heading='Out queue length',
+                attr='dell-if/if/interfaces-state/interface/statistics/if-out-qlen'
+         ),
+         Struct(heading='Out unicast packets',
+                attr='if/interfaces-state/interface/statistics/out-unicast-pkts'
+         ),
+         Struct(heading='Pause rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pause-rx-pkts'
+         ),
+         Struct(heading='Pause tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pause-tx-pkts'
+         ),
+         Struct(heading='PFC 0 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-0-rx-pkts'
+         ),
+         Struct(heading='PFC 0 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-0-tx-pkts'
+         ),
+         Struct(heading='PFC 1 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-1-rx-pkts'
+         ),
+         Struct(heading='PFC 1 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-1-tx-pkts'
+         ),
+         Struct(heading='PFC 2 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-2-rx-pkts'
+         ),
+         Struct(heading='PFC 2 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-2-tx-pkts'
+         ),
+         Struct(heading='PFC 3 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-3-rx-pkts'
+         ),
+         Struct(heading='PFC 3 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-3-tx-pkts'
+         ),
+         Struct(heading='PFC 4 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-4-rx-pkts'
+         ),
+         Struct(heading='PFC 4 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-4-tx-pkts'
+         ),
+         Struct(heading='PFC 5 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-5-rx-pkts'
+         ),
+         Struct(heading='PFC 5 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-5-tx-pkts'
+         ),
+         Struct(heading='PFC 6 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-6-rx-pkts'
+         ),
+         Struct(heading='PFC 6 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-6-tx-pkts'
+         ),
+         Struct(heading='PFC 7 rx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-7-rx-pkts'
+         ),
+         Struct(heading='PFC 7 tx packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/pfc-7-tx-pkts'
+         ),
+         Struct(heading='RED discard dropped packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/red-discard-dropped-packets'
+         ),
+         Struct(heading='Rx lpi count',
+                attr='dell-if/if/interfaces-state/interface/statistics/rx-lpi-count'
+         ),
+         Struct(heading='Rx lpi duration',
+                attr='dell-if/if/interfaces-state/interface/statistics/rx-lpi-duration'
+         ),
+         Struct(heading='Single collision frames',
+                attr='dell-if/if/interfaces-state/interface/statistics/single-collision-frames'
+         ),
+         Struct(heading='SQE test errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/sqe-test-errors'
+         ),
+         Struct(heading='Symbol errors',
+                attr='dell-if/if/interfaces-state/interface/statistics/symbol-errors'
+         ),
+         Struct(heading='Time stamp',
+                attr='dell-base-if-cmn/if/interfaces-state/interface/statistics/time-stamp'
+         ),
+         Struct(heading='Tx lpi count',
+                attr='dell-if/if/interfaces-state/interface/statistics/tx-lpi-count'
+         ),
+         Struct(heading='Tx lpi duration',
+                attr='dell-if/if/interfaces-state/interface/statistics/tx-lpi-duration'
+         ),
+         Struct(heading='Yellow discard dropped packets',
+                attr='dell-if/if/interfaces-state/interface/statistics/yellow-discard-dropped-packets')
+]
+
+for port in port_range_str_to_port_list(args.port, ['e']):
+    stats = cps_get('observed',
+                    'dell-base-if-cmn/if/interfaces-state/interface/statistics',
+                    {'if/interfaces-state/interface/if-index': port.idx}
+                    )
+    if stats is None or len(stats) != 1:
+        print  >> sys.stderr, 'Failed to get port {}'.format(port.name)
+        continue
+    stats = stats[0]
+
+    li = []
+    for c in cntrs:
+        c.value = cps_attr_data_get(stats, c.attr)
+        if c.value is None or args.nonzero and c.value == 0:
+            continue
+        li.append(c)
+    print_section(0, 'Port {}'.format(port.name), li)

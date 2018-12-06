@@ -1,0 +1,135 @@
+.TH opx-show-transceiver "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-show-transceiver \- Display optical transceiver modules
+.SH SYNOPSIS
+.SY opx-show-transceiver
+.OP \-h
+.OP \-\-help
+.OP \-\-port port-list
+.OP \-\-summary
+.YS
+.SH DESCRIPTION
+This command prints information regarding the front-panel optical transceiver modules.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+.RI --port \ port-list
+Specify front panel port to print.  A
+.I port-list
+is a comma-separated list of 1 one more ranges.  Each range is either a single port, or a pair of ports of the form \fIfrom\fR..\fIto\fR, which specifies all ports from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+1 \- Expands to 1
+.sp 1
+1,10 \- Expands to 1,10
+.sp 1
+1,4..6 \- Expands to 1,4,5,6
+.sp 1
+If the port list is not specified, all front-panel optical transceiver ports are shown.
+.TP
+--summary
+Print a summary table, with each port on a single line.
+.SH OUTPUT
+.TP
+present
+Displays whether an adapter is installed in the port.
+.TP
+type
+Displays the adapater type.  Shown only if an adapter is present.
+.TP
+vendor
+Displays the maker of the adapter.  Shown only if an adapter is present.
+.TP
+vendor part number
+Displays the maker's part number of the adapter.  Shown only if an adapter is present.
+.TP
+vendor revision
+Displays the maker's revision of the adapter.  Shown only if an adapter is present.
+.TP
+serial number
+Displays the maker's serial number for the adapater.  Shown only if an adapter is present.
+.TP
+qualified
+Displays whether the adpater is qualified.  Shown only if an adapter is present.
+.TP
+temperature
+Displays the temperature of the adapater's lasers, in degress Celsius.  Shown only if an adapter is present.
+.TP
+temperature state
+Displays the alarm state of the adapater temperature, one of: low alarm, low warning, nominal, high warning, high alarm.  Shown only if an adapter is present.
+.TP
+voltage
+Displays the voltage of the supply to the adapter, in Volts.  Shown only if an adapter is present.
+.TP
+voltage state
+Displays the alarm state of the supply voltage, one of: low alarm, low warning, nominal, high warning, high alarm.  Shown only if an adapter is present.
+.TP
+high power mode
+Displays whether the adapter is operating in high power mode.  Shown only if an adapter is present.
+.SH EXIT STATUS
+If an invalid port list is specified, the exit status shall be 1.
+.br
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-show-transceiver --port 1
+Port 1
+        present:            yes
+        type:               QSFP+ 40GBASE CR4 1.0M
+        vendor:             W2W
+        vendor part number: 75-Q010-1M
+        vendor revision:    4200
+        serial number:      161013200003
+        qualified:          yes
+        temperature:        0.0 deg. C
+        temperature state:  nominal
+        voltage:            0.0 V
+        voltage state:      nominal
+        high power mode:    yes
+
+$ opx-show-transceiver --summary
+Port | Present | Type                   | Vendor P/N | Serial #        | Qualified
+----------------------------------------------------------------------------------
+1    | yes     | QSFP+ 40GBASE CR4 1.0M | 75-Q010-1M | 161013200003    | yes
+2    | yes     | QSFP+ 40GBASE CR4 2.0M | 616750002  | CN04TC093741LGB | yes
+3    | no      |                        |            |                 |
+4    | no      |                        |            |                 |
+5    | no      |                        |            |                 |
+6    | no      |                        |            |                 |
+7    | no      |                        |            |                 |
+8    | no      |                        |            |                 |
+9    | no      |                        |            |                 |
+10   | no      |                        |            |                 |
+11   | no      |                        |            |                 |
+12   | no      |                        |            |                 |
+13   | no      |                        |            |                 |
+14   | no      |                        |            |                 |
+15   | no      |                        |            |                 |
+16   | no      |                        |            |                 |
+17   | no      |                        |            |                 |
+18   | no      |                        |            |                 |
+19   | no      |                        |            |                 |
+20   | no      |                        |            |                 |
+21   | no      |                        |            |                 |
+22   | no      |                        |            |                 |
+23   | no      |                        |            |                 |
+24   | no      |                        |            |                 |
+25   | no      |                        |            |                 |
+26   | no      |                        |            |                 |
+27   | no      |                        |            |                 |
+28   | no      |                        |            |                 |
+29   | no      |                        |            |                 |
+30   | no      |                        |            |                 |
+31   | no      |                        |            |                 |
+32   | no      |                        |            |                 |
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.

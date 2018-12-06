@@ -1,0 +1,63 @@
+.TH opx-config-interface "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-config-interface \- Configure Ethernet interface
+.SH SYNOPSIS
+.SY opx-config-interface
+.OP \-h
+.OP \-\-help
+.OP \-\-port port-list
+.OP \-\-autoneg "\fR( \fBon\fR | \fBoff\fR )"
+.OP \-\-speed "\fR( \fB10M\fR | \fB100M\fR | \fB1G\fR | \fB10G\fR | \fB25G\fR | \fB40G\fR | \fB100G\fR | \fB20G\fR | \fB50G\fR | \fB200G\fR | \fB400G\fR | \fB4G-FC\fR | \fB8G-FC\fR | \fB16G-FC\fR | \fB32G-FC\fR | \fB2G-FC\fR | \fB64G-FC\fR | \fB128G-FC\fR | \fB4G\fR | \fB1G-FC\fR )"
+.OP \-\-duplex "\fR( \fBhalf\fR | \fBfull\fR )"
+.OP \-\-fec "\fR( \fBauto\fR | \fBoff\fR | \fBcl91-rs\fR | \fBcl74-fc\fR | \fBcl108-rs\fR )"
+.YS
+.SH DESCRIPTION
+This command sets various attributes of a front-panel Ethernet interface.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+.RI --port \ port-list
+Specify front panel Ethernet interface(s) to configure.  A
+.I port-list
+is a comma-separated list of 1 one more ranges.  Each range is either a single interface, or a pair of interfaces of the form \fIfrom\fR..\fIto\fR, which specifies all interfaces from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+e101-001-0 \- Expands to e101-001-0
+.sp 1
+e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
+.sp 1
+e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
+.sp 1
+If the port list is not specified, all Ethernet front-panel ports are configured.
+.TP
+\-\-autoneg ( on | off )
+Enable or disable link auto-negotiation.
+.TP
+\-\-speed ( 10M | 100M | 1G | 10G | 25G | 40G | 100G | 20G | 50G | 200G | 400G | 4G-FC | 8G-FC | 16G-FC | 32G-FC | 2G-FC | 64G-FC | 128G-FC | 4G | 1G-FC )
+Set interface link speed.  This only has effect if link auto-negotiation is disabled.
+.TP
+\-\-duplex ( half | full )
+Set link duplex.  This only has effect if link auto-negotiation is disabled.
+.TP
+\-\-fec ( auto | off | cl91-rs | cl74-fc | cl108-rs )
+Set link forward error correction.
+.SH EXIT STATUS
+If an invalid port list is specified, the exit status shall be 1.
+.br
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-interface --port e101-001-0 --autoneg off --speed 1G --duplex full --fec auto
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-interface(1)

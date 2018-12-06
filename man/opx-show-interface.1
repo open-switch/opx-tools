@@ -1,0 +1,140 @@
+.TH opx-show-interface "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-show-interface \- Display Ethernet interface configuration and status
+.SH SYNOPSIS
+.SY opx-show-interface
+.OP \-h
+.OP \-\-help
+.OP \-\-port port-list
+.OP \-\-summary
+.YS
+.SH DESCRIPTION
+This command prints the current configuration and status of a front-panel Ethernet interface.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+.RI --port \ port-list
+Specify front panel Ethernet interface(s) to print.  A
+.I port-list
+is a comma-separated list of 1 one more ranges.  Each range is either a single interface, or a pair of interfaces of the form \fIfrom\fR..\fIto\fR, which specifies all interfaces from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+e101-001-0 \- Expands to e101-001-0
+.sp 1
+e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
+.sp 1
+e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
+.sp 1
+If the port list is not specified, all Ethernet front-panel ports are shown.
+.TP
+--summary
+Print a summary table, with each interface on a single line.
+.SH OUTPUT
+.TP
+interface index
+Displays the interface index assigned to the interface.
+.TP
+enabled
+Displays if the interface is administratively enabled.
+.TP
+MAC address
+Displays the Ethernet MAC address assigned to the interface.
+.TP
+MTU
+Displays the current maximum transmission unit (MTU) of the interface.
+.TP
+FEC
+Displays the current forward error correction (FEC) setting of the interface.
+.TP
+autonegotiation
+Display the current link autonegotiation setting of the interface.
+.TP
+speed
+Displays the configured link speed of the interface; shown only if autonegotiation is 'off'.
+.TP
+duplex
+Displays the configured link duplex of the interface; shown only if autonegotiation is 'off'.
+.TP
+operational status
+Displays the current operational status, i.e. link status, of the interface.
+.TP
+supported autonegotiation
+Displays the supported modes of autonegotiation of the interface.
+.TP
+supported speed
+Displays a list of the link speeds supported by the interface.
+.TP
+current speed
+Displays the current link speed of the interface; shown only if operational status is 'up'.
+.TP
+current duplex
+Displays the current link duplex of the interface; shown only if operational status is 'up'.
+.SH EXIT STATUS
+If an invalid port list is specified, the exit status shall be 1.
+.br
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-show-interface --port e101-001-0
+e101-001-0
+	interface index:           11
+	enabled:                   no
+	MAC address:               ec:f4:bb:fc:55:19
+	MTU:                       1532
+	FEC:                       off
+	autonegotiation:           on
+	operational status:        down
+	supported autonegotiation: on and off
+	supported speed:           1G 10G 40G
+
+$ opx-show-interface --summary
+Port       | Enabled | Operational status | Supported speed
+-----------------------------------------------------------
+e101-001-0 | yes     | up                 | 40G
+e101-002-0 | yes     | up                 | 40G
+e101-003-1 | yes     | up                 | 10G
+e101-003-2 | no      | down               | 10G
+e101-003-3 | no      | down               | 10G
+e101-003-4 | no      | down               | 10G
+e101-004-0 | no      | down               | 40G
+e101-005-0 | no      | down               | 40G
+e101-006-0 | no      | down               | 40G
+e101-007-0 | no      | down               | 40G
+e101-008-0 | no      | down               | 40G
+e101-009-0 | no      | down               | 40G
+e101-010-0 | no      | down               | 40G
+e101-011-0 | no      | down               | 40G
+e101-012-0 | no      | down               | 40G
+e101-013-0 | no      | down               | 40G
+e101-014-0 | no      | down               | 40G
+e101-015-0 | no      | down               | 40G
+e101-016-0 | no      | down               | 40G
+e101-017-0 | no      | down               | 40G
+e101-018-0 | no      | down               | 40G
+e101-019-0 | no      | down               | 40G
+e101-020-0 | no      | down               | 40G
+e101-021-0 | no      | down               | 40G
+e101-022-0 | no      | down               | 40G
+e101-023-0 | no      | down               | 40G
+e101-024-0 | no      | down               | 40G
+e101-025-0 | no      | down               | 40G
+e101-026-0 | no      | down               | 40G
+e101-027-0 | no      | down               | 40G
+e101-028-0 | no      | down               | 40G
+e101-029-0 | no      | down               | 40G
+e101-030-0 | no      | down               | 40G
+e101-031-0 | no      | down               | 40G
+e101-032-0 | no      | down               | 40G
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-interface(1)

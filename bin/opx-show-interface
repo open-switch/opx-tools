@@ -1,0 +1,115 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import argparse
+
+from opx_tools.opx_config_utils import *
+
+
+parser = argparse.ArgumentParser(description='Show interface configuration and status')
+parser.add_argument('--port',    type=str,            help='List of ports')
+parser.add_argument('--summary', action='store_true', help='Show summary output')
+args = parser.parse_args()
+
+
+enabled_outmap = {0: 'no', 1: 'yes'}
+
+oper_status_outmap = {1: 'up', 2: 'down', 3: 'testing', 4: 'unknown', 5: 'dormant', 6: 'not present', 7: 'lower layer down'}
+
+speed_outmap = {1: '10M', 2: '100M', 3: '1G', 4: '10G', 5: '25G', 6: '40G', 7: '100G', 8: 'auto', 9: '20G', 10: '50G',
+                11: '200G', 12: '400G', 13: '4G-FC', 14: '8G-FC', 15: '16G-FC', 16: '32G-FC', 17: '2G-FC', 18: '64G-FC',
+                19: '128G-FC', 20: '4G', 21: '1G-FC'
+}
+
+duplex_outmap = {1: 'full', 2: 'half', 3: 'auto'}
+
+
+if args.summary:
+    summary_values = []
+
+for port in port_range_str_to_port_list(args.port, ['e']):
+    cfg = cps_get('target',
+                  'dell-base-if-cmn/if/interfaces/interface',
+                  {'dell-base-if-cmn/if/interfaces/interface/if-index': port.idx}
+    )
+    status = cps_get('observed',
+                     'dell-base-if-cmn/if/interfaces-state/interface',
+                     {'if/interfaces-state/interface/if-index': port.idx}
+    )
+    if cfg is None or len(cfg) != 1 or status is None or len(status) != 1:
+        print  >> sys.stderr, 'Failed to get port {}'.format(port.name)
+        continue
+    cfg    = cfg[0]
+    status = status[0]
+    if args.summary:
+        summary_values += [[port.name,
+                            cps_attr_data_get(cfg,    'if/interfaces/interface/enabled'),
+                            cps_attr_data_get(status, 'if/interfaces-state/interface/oper-status'),
+                            cps_attr_data_get(status, 'dell-if/if/interfaces-state/interface/supported-speed')
+        ]]
+        continue
+    li = [Struct(heading='Interface index', value=port.idx),
+          Struct(heading='Enabled',
+                 value=cps_attr_data_get(cfg, 'if/interfaces/interface/enabled'),
+                 outmap=enabled_outmap
+          ),
+          Struct(heading='MAC address',
+                 value=cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/phys-address'),
+          ),
+          Struct(heading='MTU',
+                 value=cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/mtu'),
+          ),
+          Struct(heading='FEC',
+                 value=cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/fec'),
+                 outmap={2: 'off', 4: 'CL74', 3: 'CL91', 5: 'CL108', 1: 'auto'}
+          ),
+          Struct(heading='Autonegotiation',
+                 value=cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/auto-negotiation'),
+                 outmap={False: 'off', True: 'on'}
+          )
+    ]
+    if not cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/auto-negotiation'):
+        li += [Struct(heading='Speed',
+                      value=cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/speed'),
+                      outmap=speed_outmap
+               ),
+               Struct(heading='Duplex',
+                      value=cps_attr_data_get(cfg, 'dell-if/if/interfaces/interface/duplex'),
+                      outmap=duplex_outmap
+               )
+        ]
+    li += [Struct(heading='Operational status',
+                  value=cps_attr_data_get(status, 'if/interfaces-state/interface/oper-status'),
+                  outmap=oper_status_outmap
+           ),
+           Struct(heading='Supported autonegotiation',
+                  value=cps_attr_data_get(status, 'dell-if/if/interfaces-state/interface/supported-autoneg'),
+                  outmap={1: 'none', 2: 'on', 3: 'off', 4: 'on and off'}
+           ),
+           Struct(heading='Supported speed',
+                  value=cps_attr_data_get(status, 'dell-if/if/interfaces-state/interface/supported-speed'),
+                  outmap=speed_outmap
+           )
+    ]
+    if cps_attr_data_get(status, 'if/interfaces-state/interface/oper-status') == 1:
+        speed = cps_attr_data_get(status, 'if/interfaces-state/interface/speed')
+        li += [Struct(heading='Current speed', value='{}M'.format(speed / 1000000) if speed < 1000000000 else '{}G'.format(speed / 1000000000)),
+               Struct(heading='Current duplex', value=cps_attr_data_get(status, 'dell-if/if/interfaces-state/interface/duplex'), outmap=duplex_outmap)
+        ]
+    print_section(0, port.name, li)
+if args.summary:
+    print_summary(['Port', 'Enabled', 'Operational status', 'Supported speed'], summary_values, [None, enabled_outmap, oper_status_outmap, speed_outmap])

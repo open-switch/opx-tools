@@ -1,6 +1,8 @@
 ACLOCAL_AMFLAGS=-I m4
 
-bin_SCRIPTS = scripts/bin/*
+bin_SCRIPTS = $(wildcard bin/*)
 
-pyutilsdir=$(libdir)/opx
-pyutils_SCRIPTS = scripts/lib/python/*.py
+pkgpythondir = $(pythondir)/opx_tools
+pkgpython_DATA = $(wildcard lib/*)
+
+man1_MANS = $(wildcard man/*)

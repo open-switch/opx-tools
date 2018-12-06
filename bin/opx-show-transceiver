@@ -1,0 +1,111 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import argparse
+
+import cps
+import cps_object
+import cps_utils
+
+import nas_front_panel_map as fp
+import nas_fp_port_utils as fp_utils
+import nas_phy_media as media
+
+from opx_tools.opx_config_utils import *
+
+
+num_ports = len(cps_get('observed', 'base-pas/media'))
+
+def port_range_str_to_port_list(s):
+    if s is None:
+        return range(1, num_ports + 1)
+    result = []
+    for x in s.split(','):
+        r = x.split('..')
+        rlen = len(r)
+        if rlen < 1 or rlen > 2:
+            return None
+        if rlen == 1:
+            r = [r[0], r[0]]
+        try:
+            loport = int(r[0])
+            hiport = int(r[1])
+        except:
+            return None
+        if loport < 1 or hiport > num_ports:
+            return None
+        while loport <= hiport:
+            result.append(loport)
+            loport += 1
+    return result
+
+
+parser = argparse.ArgumentParser(description='Show interface configuration')
+parser.add_argument('--port',    type=str,            help='List of ports')
+parser.add_argument('--summary', action='store_true', help='Show configuration summary')
+args = parser.parse_args()
+
+present_outmap = {0: 'no', 1: 'yes'}
+qualified_outmap = {None: '', 0: 'no', 1: 'yes'}
+alarm_state_outmap = {1: 'nominal', 2: 'high alarm', 3: 'low alarm', 4: 'high warning', 5: 'low warning'}
+high_power_mode_outmap = {0: 'no', 1: 'yes'}
+
+if args.summary:
+    summary_values = []
+
+for port in port_range_str_to_port_list(args.port):
+    resp = cps_get('observed', 'base-pas/media', {'base-pas/media/port': port})
+    if resp is None or len(resp) != 1:
+        print >>sys.stderr, 'Failed to get port {}', port
+        continue
+    resp = resp[0]
+    present = cps_attr_data_get(resp, 'base-pas/media/present')
+    if present != 0:
+        t = cps_attr_data_get(resp, 'base-pas/media/display-string')
+        if t == '':
+            t = media.get_media_str(cps_attr_data_get(resp, 'base-pas/media/type'))
+    if args.summary:
+        summary_values += [[port, present] + (['', '', '', None] if present == 0 else
+                                              [t,
+                                               cps_attr_data_get(resp, 'base-pas/media/vendor-pn'),
+                                               cps_attr_data_get(resp, 'base-pas/media/serial-number'),
+                                               cps_attr_data_get(resp, 'base-pas/media/qualified')
+                                              ]
+                                             )
+                           ]
+        continue
+    li = [Struct(heading='present', value=present, outmap=present_outmap)
+          ]
+    if present != 0:
+        li += [Struct(heading='Type',                 value=t),
+               Struct(heading='Vendor',               value=cps_attr_data_get(resp, 'base-pas/media/vendor-name')),
+               Struct(heading='Vendor part number',   value=cps_attr_data_get(resp, 'base-pas/media/vendor-pn')),
+               Struct(heading='Vendor revision',      value=cps_attr_data_get(resp, 'base-pas/media/vendor-rev')),
+               Struct(heading='Serial number',        value=cps_attr_data_get(resp, 'base-pas/media/serial-number')),
+               Struct(heading='Qualified',            value=cps_attr_data_get(resp, 'base-pas/media/qualified'), outmap=qualified_outmap),
+               Struct(heading='Temperature',          value=cps_attr_data_get(resp, 'base-pas/media/current-temperature'), suffix='deg. C'),
+               Struct(heading='Temperature state',    value=cps_attr_data_get(resp, 'base-pas/media/temp-state'), outmap=alarm_state_outmap),
+               Struct(heading='Voltage',              value=cps_attr_data_get(resp, 'base-pas/media/current-voltage'), suffix='V'),
+               Struct(heading='Voltage state',        value=cps_attr_data_get(resp, 'base-pas/media/voltage-state'), outmap=alarm_state_outmap),
+               Struct(heading='High power mode',      value=cps_attr_data_get(resp, 'base-pas/media/high-power-mode'), outmap=high_power_mode_outmap)
+               ]
+    print_section(0, 'Port {}'.format(port), li)
+if args.summary:
+    print_summary(['Port', 'Present', 'Type', 'Vendor P/N', 'Serial #', 'Qualified'],
+                  summary_values,
+                  [None, present_outmap, None, None, None, qualified_outmap]
+                  )

@@ -1,0 +1,209 @@
+.TH opx-show-global-switch "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-show-global-switch \- Display 
+.SH SYNOPSIS
+.SY opx-show-global-switch
+.OP \-h
+.OP \-\-help
+.YS
+.SH DESCRIPTION
+This command prints the current configuration and status of switch element.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.SH OUTPUT
+.TP
+acl entry max priority
+The maximum priority of an ACL table entry.
+.TP
+acl entry min priority
+The minimum priority of an ACL table entry.
+.TP
+acl table max priority
+The maximum priority of an ACL table.
+.TP
+acl table min priority
+The minimum priority of an ACL table.
+.TP
+admin status
+.TP
+bridge table size
+.TP
+bst enable
+.TP
+bst tracking mode
+.TP
+counter refresh interval
+.TP
+current profile
+The switch profile currently in use.
+.TP
+deep buffer mode enable
+.TP
+default mac address
+.TP
+default profile
+.TP
+default vlan id
+The VLAN to which untagged incoming Ethernet frames are assigned.
+.TP
+disable default vlan
+.TP
+ecmp group size
+.TP
+ecmp hash algorithm
+.TP
+ecmp hash fields
+The list of frame/packet fields which are 
+.TP
+ecmp hash seed value
+.TP
+ecn ect threshold enable
+.TP
+egress buffer pool num
+.TP
+egress flow table size
+.TP
+ingress buffer pool num
+.TP
+ingress flow table size
+.TP
+ipv4 host size
+.TP
+ipv4 route table size
+.TP
+ipv6 extended prefix routes
+.TP
+ipv6 extended prefix routes lpm block size
+.TP
+ipv6 host size
+.TP
+ipv6 route table size
+.TP
+l3 nexthop table size
+.TP
+lag hash algorithm
+.TP
+lag hash fields
+.TP
+lag hash seed value
+.TP
+mac address aging timer
+.TP
+max ecmp entry per group
+.TP
+max ipv6 extended prefix routes
+.TP
+max mtu
+.TP
+max supported lags
+.TP
+max vxlan overlay nexthops
+.TP
+max vxlan overlay rifs
+.TP
+next profile
+The switch profile that will be used after the next boot.
+.TP
+npu identifiers
+.TP
+number of multicast queues per port
+.TP
+number of queues cpu port
+.TP
+number of queues per port
+.TP
+number of unicast queues per port
+.TP
+operational status
+.TP
+pfc dl cfg params
+.TP
+pfc dld interval range max
+.TP
+pfc dld interval range min
+.TP
+pfc dlr action
+.TP
+pfc dlr interval range max
+.TP
+pfc dlr interval range min
+.TP
+qos rate adjust
+.TP
+rif table size
+.TP
+supported profiles
+A list of profiles currently supported.
+.TP
+switch mode
+.TP
+temperature
+Temperature reading, in degrees Celsius, of the NPU junction sensor.
+.TP
+total buffer size
+.TP
+uft mode
+The current UFT (unified forwarding table) mode.
+.TP
+uft host table size
+.TP
+uft l2 mac table size
+.TP
+uft l3 route table size
+.TP
+vxlan riot enable
+.P
+Note that not all fields are shown on all platforms.
+.SH EXIT STATUS
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-show-global-switch
+Switch id 0
+	acl entry max priority:                     2147483647
+	acl entry min priority:                     0
+	acl table max priority:                     11
+	acl table min priority:                     0
+	bridge table size:                          139264
+	counter refresh interval:                   5 s
+	current profile:                            profile-1
+	default mac address:                        50:9a:4c:d5:ac:f0
+	default profile:                            profile-1
+	ecmp hash algorithm:                        crc
+	ecmp hash seed value:                       0
+	egress buffer pool num:                     4
+	ingress buffer pool num:                    4
+	ipv6 extended prefix routes:                0
+	ipv6 extended prefix routes lpm block size: 1024
+	lag hash algorithm:                         crc
+	lag hash seed value:                        0
+	mac address aging timer:                    1800 s
+	max ecmp entry per group:                   0
+	max ipv6 extended prefix routes:            3072
+	max mtu:                                    9216
+	next profile:                               profile-1
+	number of multicast queues per port:        10
+	number of queues cpu port:                  48
+	number of queues per port:                  20
+	number of unicast queues per port:          10
+	supported profiles:                         profile-1 profile-2
+	switch mode:                                store and forward
+	temperature:                                37 deg. C
+	total buffer size:                          43008
+	uft mode:                                   default
+	uft host table size:                        139264
+	uft l2 mac table size:                      139264
+	uft l3 route table size:                    32768
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-global-switch(1)
