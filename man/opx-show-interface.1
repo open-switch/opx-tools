@@ -33,10 +33,10 @@ If the port list is not specified, all Ethernet front-panel ports are shown.
 Print a summary table, with each interface on a single line.
 .SH OUTPUT
 .TP
-interface index
+Interface index
 Displays the interface index assigned to the interface.
 .TP
-enabled
+Enabled
 Displays if the interface is administratively enabled.
 .TP
 MAC address
@@ -48,28 +48,28 @@ Displays the current maximum transmission unit (MTU) of the interface.
 FEC
 Displays the current forward error correction (FEC) setting of the interface.
 .TP
-autonegotiation
+Autonegotiation
 Display the current link autonegotiation setting of the interface.
 .TP
-speed
+Speed
 Displays the configured link speed of the interface; shown only if autonegotiation is 'off'.
 .TP
-duplex
+Duplex
 Displays the configured link duplex of the interface; shown only if autonegotiation is 'off'.
 .TP
-operational status
+Operational status
 Displays the current operational status, i.e. link status, of the interface.
 .TP
-supported autonegotiation
+Supported autonegotiation
 Displays the supported modes of autonegotiation of the interface.
 .TP
-supported speed
+Supported speed
 Displays a list of the link speeds supported by the interface.
 .TP
-current speed
+Current speed
 Displays the current link speed of the interface; shown only if operational status is 'up'.
 .TP
-current duplex
+Current duplex
 Displays the current link duplex of the interface; shown only if operational status is 'up'.
 .SH EXIT STATUS
 If an invalid port list is specified, the exit status shall be 1.
@@ -82,15 +82,15 @@ Otherwise, the exit status is 0.
 .eo
 $ opx-show-interface --port e101-001-0
 e101-001-0
-	interface index:           11
-	enabled:                   no
+	Interface index:           11
+	Enabled:                   no
 	MAC address:               ec:f4:bb:fc:55:19
 	MTU:                       1532
 	FEC:                       off
-	autonegotiation:           on
-	operational status:        down
-	supported autonegotiation: on and off
-	supported speed:           1G 10G 40G
+	Autonegotiation:           on
+	Operational status:        down
+	Supported autonegotiation: on and off
+	Supported speed:           1G 10G 40G
 
 $ opx-show-interface --summary
 Port       | Enabled | Operational status | Supported speed

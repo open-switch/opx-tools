@@ -169,37 +169,37 @@ cntrs = [Struct(heading='Alignment errors',
          Struct(heading='In unknown opcodes',
                 attr='dell-if/if/interfaces-state/interface/statistics/in-unknown-opcodes'
          ),
-         Struct(heading='In unknown protos',
+         Struct(heading='In unknown protocols',
                 attr='if/interfaces-state/interface/statistics/in-unknown-protos'
          ),
-         Struct(heading='Internal mac receive errors',
+         Struct(heading='Internal MAC receive errors',
                 attr='dell-if/if/interfaces-state/interface/statistics/internal-mac-receive-errors'
          ),
-         Struct(heading='Internal mac transmit errors',
+         Struct(heading='Internal MAC transmit errors',
                 attr='dell-if/if/interfaces-state/interface/statistics/internal-mac-transmit-errors'
          ),
          Struct(heading='IP in discards',
                 attr='dell-if/if/interfaces-state/interface/statistics/ip-in-discards'
          ),
-         Struct(heading='IP in forw datagrams',
+         Struct(heading='IP in forwarded datagrams',
                 attr='dell-if/if/interfaces-state/interface/statistics/ip-in-forw-datagrams'
          ),
-         Struct(heading='IP in hdr errors',
+         Struct(heading='IP in header errors',
                 attr='dell-if/if/interfaces-state/interface/statistics/ip-in-hdr-errors'
          ),
          Struct(heading='IP in receives',
                 attr='dell-if/if/interfaces-state/interface/statistics/ip-in-receives'
          ),
-         Struct(heading='Ipv6 in addr errors',
+         Struct(heading='IPv6 in address errors',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-addr-errors'
          ),
          Struct(heading='IPv6 in discards',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-discards'
          ),
-         Struct(heading='IPv6 in hdr errors',
+         Struct(heading='IPv6 in header errors',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-hdr-errors'
          ),
-         Struct(heading='IPv6 in mcast packets',
+         Struct(heading='IPv6 in multicast packets',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-in-mcast-pkts'
          ),
          Struct(heading='IPv6 in receives',
@@ -208,16 +208,16 @@ cntrs = [Struct(heading='Alignment errors',
          Struct(heading='IPv6 out discards',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-out-discards'
          ),
-         Struct(heading='IPv6 out forw datagrams',
+         Struct(heading='IPv6 out forwarded datagrams',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-out-forw-datagrams'
          ),
-         Struct(heading='IPv6 out mcast packets',
+         Struct(heading='IPv6 out multicast packets',
                 attr='dell-if/if/interfaces-state/interface/statistics/ipv6-out-mcast-pkts'
          ),
          Struct(heading='Late collisions',
                 attr='dell-if/if/interfaces-state/interface/statistics/late-collisions'
          ),
-         Struct(heading='Multiple colision frames',
+         Struct(heading='Multiple collision frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/multiple-colision-frames'
          ),
          Struct(heading='Out broadcast packets',

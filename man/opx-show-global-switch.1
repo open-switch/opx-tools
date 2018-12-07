@@ -14,146 +14,146 @@ This command prints the current configuration and status of switch element.
 Print help text.
 .SH OUTPUT
 .TP
-acl entry max priority
+ACL entry max priority
 The maximum priority of an ACL table entry.
 .TP
-acl entry min priority
+ACL entry min priority
 The minimum priority of an ACL table entry.
 .TP
-acl table max priority
+ACL table max priority
 The maximum priority of an ACL table.
 .TP
-acl table min priority
+ACL table min priority
 The minimum priority of an ACL table.
 .TP
-admin status
+Admin status
 .TP
-bridge table size
+Bridge table size
 .TP
-bst enable
+BST enable
 .TP
-bst tracking mode
+BST tracking mode
 .TP
-counter refresh interval
+Counter refresh interval
 .TP
-current profile
+Current profile
 The switch profile currently in use.
 .TP
-deep buffer mode enable
+Deep buffer mode enable
 .TP
-default mac address
+Default MAC address
 .TP
-default profile
+Default profile
 .TP
-default vlan id
+Default VLAN id
 The VLAN to which untagged incoming Ethernet frames are assigned.
 .TP
-disable default vlan
+Disable default VLAN
 .TP
-ecmp group size
+ECMP group size
 .TP
-ecmp hash algorithm
+ECMP hash algorithm
 .TP
-ecmp hash fields
+ECMP hash fields
 The list of frame/packet fields which are 
 .TP
-ecmp hash seed value
+ECMP hash seed value
 .TP
-ecn ect threshold enable
+ECN ECT threshold enable
 .TP
-egress buffer pool num
+Egress buffer pool num
 .TP
-egress flow table size
+Egress flow table size
 .TP
-ingress buffer pool num
+Ingress buffer pool num
 .TP
-ingress flow table size
+Ingress flow table size
 .TP
-ipv4 host size
+IPv4 host size
 .TP
-ipv4 route table size
+IPv4 route table size
 .TP
-ipv6 extended prefix routes
+IPv6 extended prefix routes
 .TP
-ipv6 extended prefix routes lpm block size
+IPv6 extended prefix routes LPM block size
 .TP
-ipv6 host size
+IPv6 host size
 .TP
-ipv6 route table size
+IPv6 route table size
 .TP
-l3 nexthop table size
+L3 nexthop table size
 .TP
-lag hash algorithm
+LAG hash algorithm
 .TP
-lag hash fields
+LAG hash fields
 .TP
-lag hash seed value
+LAG hash seed value
 .TP
-mac address aging timer
+MAC address aging timer
 .TP
-max ecmp entry per group
+Max ECMP entry per group
 .TP
-max ipv6 extended prefix routes
+Max IPv6 extended prefix routes
 .TP
-max mtu
+Max MTU
 .TP
-max supported lags
+Max supported lags
 .TP
-max vxlan overlay nexthops
+Max VXLAN overlay nexthops
 .TP
-max vxlan overlay rifs
+Max VXLAN overlay RIFs
 .TP
-next profile
+Next profile
 The switch profile that will be used after the next boot.
 .TP
-npu identifiers
+NPU identifiers
 .TP
-number of multicast queues per port
+Number of multicast queues per port
 .TP
-number of queues cpu port
+Number of queues CPU port
 .TP
-number of queues per port
+Number of queues per port
 .TP
-number of unicast queues per port
+Number of unicast queues per port
 .TP
-operational status
+Operational status
 .TP
-pfc dl cfg params
+PFC dl cfg params
 .TP
-pfc dld interval range max
+PFC dld interval range max
 .TP
-pfc dld interval range min
+PFC dld interval range min
 .TP
-pfc dlr action
+PFC dlr action
 .TP
-pfc dlr interval range max
+PFC dlr interval range max
 .TP
-pfc dlr interval range min
+PFC dlr interval range min
 .TP
-qos rate adjust
+QoS rate adjust
 .TP
-rif table size
+RIF table size
 .TP
-supported profiles
+Supported profiles
 A list of profiles currently supported.
 .TP
-switch mode
+Switch mode
 .TP
-temperature
+Temperature
 Temperature reading, in degrees Celsius, of the NPU junction sensor.
 .TP
-total buffer size
+Total buffer size
 .TP
-uft mode
+UFT mode
 The current UFT (unified forwarding table) mode.
 .TP
-uft host table size
+UFT host table size
 .TP
-uft l2 mac table size
+UFT L2 mac table size
 .TP
-uft l3 route table size
+UFT L3 route table size
 .TP
-vxlan riot enable
+VXLAN riot enable
 .P
 Note that not all fields are shown on all platforms.
 .SH EXIT STATUS
@@ -165,40 +165,40 @@ Otherwise, the exit status is 0.
 .eo
 $ opx-show-global-switch
 Switch id 0
-	acl entry max priority:                     2147483647
-	acl entry min priority:                     0
-	acl table max priority:                     11
-	acl table min priority:                     0
-	bridge table size:                          139264
-	counter refresh interval:                   5 s
-	current profile:                            profile-1
-	default mac address:                        50:9a:4c:d5:ac:f0
-	default profile:                            profile-1
-	ecmp hash algorithm:                        crc
-	ecmp hash seed value:                       0
-	egress buffer pool num:                     4
-	ingress buffer pool num:                    4
-	ipv6 extended prefix routes:                0
-	ipv6 extended prefix routes lpm block size: 1024
-	lag hash algorithm:                         crc
-	lag hash seed value:                        0
-	mac address aging timer:                    1800 s
-	max ecmp entry per group:                   0
-	max ipv6 extended prefix routes:            3072
-	max mtu:                                    9216
-	next profile:                               profile-1
-	number of multicast queues per port:        10
-	number of queues cpu port:                  48
-	number of queues per port:                  20
-	number of unicast queues per port:          10
-	supported profiles:                         profile-1 profile-2
-	switch mode:                                store and forward
-	temperature:                                37 deg. C
-	total buffer size:                          43008
-	uft mode:                                   default
-	uft host table size:                        139264
-	uft l2 mac table size:                      139264
-	uft l3 route table size:                    32768
+	ACL entry max priority:                     2147483647
+	ACL entry min priority:                     0
+	ACL table max priority:                     11
+	ACL table min priority:                     0
+	Bridge table size:                          139264
+	Counter refresh interval:                   5 s
+	Current profile:                            profile-1
+	Default MAC address:                        50:9a:4c:d5:ac:f0
+	Default profile:                            profile-1
+	ECMP hash algorithm:                        crc
+	ECMP hash seed value:                       0
+	Egress buffer pool num:                     4
+	Ingress buffer pool num:                    4
+	IPv6 extended prefix routes:                0
+	IPv6 extended prefix routes LPM block size: 1024
+        LAG hash algorithm:                         crc
+	LAG hash seed value:                        0
+	MAC address aging timer:                    1800 s
+	Max ECMP entry per group:                   0
+	Max IPv6 extended prefix routes:            3072
+	Max MTU:                                    9216
+	Next profile:                               profile-1
+	Number of multicast queues per port:        10
+	Number of queues CPU port:                  48
+	Number of queues per port:                  20
+	Number of unicast queues per port:          10
+	Supported profiles:                         profile-1 profile-2
+	Switch mode:                                store and forward
+	Temperature:                                37 deg. C
+	Total buffer size:                          43008
+	UFT mode:                                   default
+	UFT host table size:                        139264
+	UFT L2 mac table size:                      139264
+	UFT L3 route table size:                    32768
 .ec
 .fi
 .SH REPORTING BUGS

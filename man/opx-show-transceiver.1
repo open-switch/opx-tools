@@ -33,40 +33,40 @@ If the port list is not specified, all front-panel optical transceiver ports are
 Print a summary table, with each port on a single line.
 .SH OUTPUT
 .TP
-present
+Present
 Displays whether an adapter is installed in the port.
 .TP
-type
+Type
 Displays the adapater type.  Shown only if an adapter is present.
 .TP
-vendor
+Vendor
 Displays the maker of the adapter.  Shown only if an adapter is present.
 .TP
-vendor part number
+Vendor part number
 Displays the maker's part number of the adapter.  Shown only if an adapter is present.
 .TP
-vendor revision
+Vendor revision
 Displays the maker's revision of the adapter.  Shown only if an adapter is present.
 .TP
-serial number
+Serial number
 Displays the maker's serial number for the adapater.  Shown only if an adapter is present.
 .TP
-qualified
+Qualified
 Displays whether the adpater is qualified.  Shown only if an adapter is present.
 .TP
-temperature
+Temperature
 Displays the temperature of the adapater's lasers, in degress Celsius.  Shown only if an adapter is present.
 .TP
-temperature state
+Temperature state
 Displays the alarm state of the adapater temperature, one of: low alarm, low warning, nominal, high warning, high alarm.  Shown only if an adapter is present.
 .TP
-voltage
+Voltage
 Displays the voltage of the supply to the adapter, in Volts.  Shown only if an adapter is present.
 .TP
-voltage state
+Voltage state
 Displays the alarm state of the supply voltage, one of: low alarm, low warning, nominal, high warning, high alarm.  Shown only if an adapter is present.
 .TP
-high power mode
+High power mode
 Displays whether the adapter is operating in high power mode.  Shown only if an adapter is present.
 .SH EXIT STATUS
 If an invalid port list is specified, the exit status shall be 1.
@@ -79,18 +79,18 @@ Otherwise, the exit status is 0.
 .eo
 $ opx-show-transceiver --port 1
 Port 1
-        present:            yes
-        type:               QSFP+ 40GBASE CR4 1.0M
-        vendor:             W2W
-        vendor part number: 75-Q010-1M
-        vendor revision:    4200
-        serial number:      161013200003
-        qualified:          yes
-        temperature:        0.0 deg. C
-        temperature state:  nominal
-        voltage:            0.0 V
-        voltage state:      nominal
-        high power mode:    yes
+        Present:            yes
+        Type:               QSFP+ 40GBASE CR4 1.0M
+        Vendor:             W2W
+        Vendor part number: 75-Q010-1M
+        Vendor revision:    4200
+        Serial number:      161013200003
+        Qualified:          yes
+        Temperature:        0.0 deg. C
+        Temperature state:  nominal
+        Voltage:            0.0 V
+        Voltage state:      nominal
+        High power mode:    yes
 
 $ opx-show-transceiver --summary
 Port | Present | Type                   | Vendor P/N | Serial #        | Qualified

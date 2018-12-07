@@ -88,7 +88,7 @@ for port in port_range_str_to_port_list(args.port):
                                              )
                            ]
         continue
-    li = [Struct(heading='present', value=present, outmap=present_outmap)
+    li = [Struct(heading='Present', value=present, outmap=present_outmap)
           ]
     if present != 0:
         li += [Struct(heading='Type',                 value=t),
