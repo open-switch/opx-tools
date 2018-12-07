@@ -16,7 +16,7 @@
 
 import argparse
 
-from opx_tools.opx_config_utils imort *
+from opx_tools.opx_config_utils import *
 
 
 attrs = [Struct(option='--autoneg',
