@@ -1,0 +1,140 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+from cps_utils import *
+import argparse
+import nas_os_utils
+
+direction_map = {
+                  "ingress": "1",
+                  "egress": "2",
+                  "ingress_egress": "3"
+                }
+
+mirror_type_map = {
+                  "span": "1",
+                  "rspan": "2"
+                }
+
+def commit(obj, op):
+    l = []
+    obj_tup = (op, obj.get())
+    l.append(obj_tup)
+    t = CPSTransaction(l)
+    ret = t.commit()
+    if ret:
+        print "Success"
+    else:
+        print "Failed"
+    return ret
+
+def add_mirror_src_direction(obj, intf, dir):
+    
+    attr_l = ["intf", "0", "src"]
+    obj.add_embed_attr(attr_l, nas_os_utils.if_nametoindex(intf))
+    
+    attr_l[2] = "direction"
+    obj.add_embed_attr(attr_l, int(direction_map[dir])) 
+
+
+def _create_mirror_session(args, parser):
+
+    if not args.src_intf or not args.dest_intf or not args.type or not args.direction:
+        print "Please provide all the required (src_intf/dest_intf/type/direction"
+        parser.print_help()
+        return
+
+    if args.type == "rspan" and not args.vlan :
+       print "VLAN attribute is mandatory for rspan session"
+       parser.print_help()
+       return
+    else :
+       _vlan = args.vlan
+
+    obj = CPSObject('base-mirror/entry',
+                     data= {"type":mirror_type_map[args.type],
+                            "dst-intf" : nas_os_utils.if_nametoindex(args.dest_intf) }) 
+
+    add_mirror_src_direction(obj, args.src_intf, args.direction)
+
+    if _vlan :
+       obj.add_attr("vlan", _vlan)
+
+    print obj.get()
+    return commit(obj, "create")
+
+
+def _delete_mirror_session(args,parser):
+
+    if not args.id:
+        print "Missing argument: id"
+        parser.print_help()
+        return
+    
+    obj = CPSObject('base-mirror/entry',
+                     data= {"id" : args.id })
+
+    print obj.get()
+    commit(obj, "delete")
+
+def _set_mirror_session(args,parser):
+
+    if not args.id:
+        print "Missing required argument: id"
+        parser.print_help()
+        return
+    
+    obj = CPSObject('base-mirror/entry',
+                     data= {"id" : args.id })
+
+    if (args.src_intf and not args.direction) or (args.direction and not args.src_intf) :
+        print "Mandatory attributes are missing : src_intf, direction"
+        parser.print_help()
+        return
+    
+    if args.src_intf :
+        add_mirror_src_direction(obj, args.src_intf, args.direction)
+
+    if args.dest_intf :
+        obj.add_attr("dst-intf", nas_os_utils.if_nametoindex(args.dest_intf)) 
+
+    if args.vlan :
+        obj.add_attr("vlan", args.vlan) 
+    
+    print obj.get()
+    commit(obj, "set")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'Tool for Mirroing configuration')
+    parser.add_argument('command', choices = ['create', 'delete', 'set'])
+    parser.add_argument('--src_intf', help = 'Name of the source interface')
+    parser.add_argument('--dest_intf', help = 'Name of the destination interface')
+    parser.add_argument('--direction', choices = ['ingress', 'egress', 'ingress_egress'], help = 'Mirroring direction')
+    parser.add_argument('--id', type = int, help = 'Session identifier')
+    parser.add_argument('--vlan', type = int, help = 'VLAN id (for RSPAN)')
+    parser.add_argument('--type', choices = ['span', 'rspan'], help = 'Mirroing session type')
+    
+    args = parser.parse_args()
+
+    if args.command == 'create':
+        _create_mirror_session(args,parser)
+
+    elif args.command == 'set':
+        _set_mirror_session(args,parser)
+
+    elif args.command == 'delete':
+        _delete_mirror_session(args,parser)
+

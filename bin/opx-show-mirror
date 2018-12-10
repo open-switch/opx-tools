@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+from cps_utils import *
+import argparse
+import cps_object
+import nas_os_if_utils as if_utl
+import nas_os_utils
+
+direction_map = {
+                  "1" : "ingress",
+                  "2" : "egress",
+                  "3" : "ingress_egress"
+                }
+
+type_map = {
+             "1" : "span",
+             "2" : "rspan"
+           }
+
+def _show_mirror_session(args, parser):
+
+    get = []
+
+    if args.id :
+      get_dict = {"id": args.id}
+    else :
+      get_dict = {}
+    
+    obj = CPSObject('base-mirror/entry',
+                     data= get_dict)
+
+    if cps.get([obj.get()], get):
+        for i in get:
+           get_req_obj = cps_object.CPSObject(obj=i)
+           _id = get_req_obj.get_attr_data('base-mirror/entry/id')
+           _dest_intf = get_req_obj.get_attr_data('base-mirror/entry/dst-intf')
+           _type = get_req_obj.get_attr_data('base-mirror/entry/type')
+           
+           if type_map[str(_type)] == "rspan" :
+             _vlan = get_req_obj.get_attr_data('base-mirror/entry/vlan')
+          
+           print "\n"
+           print '	Id:       	    ' + str(_id)
+           print '	Dest Intf:	    ' + if_utl.ifindex_to_name (_dest_intf)
+           print '	Type:    	    ' + type_map[str(_type)]
+           if type_map[str(_type)] == "rspan" :
+             _vlan = get_req_obj.get_attr_data('base-mirror/entry/vlan')
+             print '	VLAN:               ' + str(_vlan)
+           print "\n"
+    else:
+       print "\n"
+       print '	No Entry is found.'
+       print "\n"
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'Tool for Mirroring show utility')
+    parser.add_argument('--id', help='session idenitifier')
+
+    args = parser.parse_args()
+
+    _show_mirror_session(args,parser)
+
