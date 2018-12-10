@@ -7,6 +7,7 @@ opx-show-sflow \- Display Sflow configuration and status
 .OP \-\-help
 .OP \-\-id ID
 .OP \-\-port PORT
+.OP \-\-direction "\fR( \fBingress\fR | \fBegress\fR  \fBingress_egress\fR )"
 .YS
 .SH DESCRIPTION
 This command prints the current configuration and status of Sflow sessions
@@ -19,7 +20,10 @@ Print help text.
 Session identifier
 .TP
 \-\-port
-Specify front panel Ethernet interface to configure.
+Specify front panel Ethernet interface
+.TP
+\-\-direction
+Specify the direction (ingress/egress/ingress_egress)
 .SH OUTPUT
 .TP
 Id
