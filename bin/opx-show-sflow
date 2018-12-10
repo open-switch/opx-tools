@@ -1,0 +1,96 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+from cps_utils import *
+import argparse
+import cps_object
+import nas_os_if_utils as if_utl
+import nas_os_utils
+
+direction_map = {
+                  "1": "ingress",
+                  "2": "egress",
+                  "3": "ingress_egress"
+                }
+
+def get_session_id(_if):
+
+    _ifindex = _if
+    if not _if.isdigit():
+        _ifindex = nas_os_utils.if_nametoindex(_if)   
+    
+    obj = CPSObject("base-sflow/entry")
+    get = []
+
+    if cps.get([obj.get()], get):
+        for i in get:
+            obj = CPSObject(obj=i)
+            _read_ifindex = obj.get_attr_data('ifindex')
+
+            if str(_read_ifindex) == str(_ifindex):
+                _id = str(obj.get_attr_data("id"))
+                return _id
+    
+    return -1 
+                
+
+def _show_sflow_session(args, parser):
+
+    get = []
+
+    if args.id :
+        _session_id = args.id
+        get_dict = {"id": _session_id}
+
+    elif args.port :
+        _session_id = get_session_id(args.port)
+        if _session_id == -1 :
+           print "\n No Entry is found.\n"
+           return
+        get_dict = {"id": _session_id}
+    
+    else :
+        get_dict = {}
+
+    obj = CPSObject('base-sflow/entry',
+                     data= get_dict)
+
+    if cps.get([obj.get()], get):
+        for i in get:
+           get_req_obj = cps_object.CPSObject(obj=i)
+           _id = get_req_obj.get_attr_data('base-sflow/entry/id')
+           _direction = get_req_obj.get_attr_data('base-sflow/entry/direction')
+           _rate = get_req_obj.get_attr_data('base-sflow/entry/sampling-rate')
+           _ifindex = get_req_obj.get_attr_data('base-sflow/entry/ifindex')
+           _ifname = if_utl.ifindex_to_name (_ifindex)
+           print "\n"
+           print '	Id:       	    ' + str(_id)
+           print '	Direction:	    ' + direction_map[str(_direction)]
+           print '	Rate:    	    ' + str(_rate)
+           print '	Port:               ' + _ifname
+           print "\n"
+    else:
+       print "\n No Entry is found.\n"
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'Tool for SFLOW show utility')
+    parser.add_argument('--id', help='session idenitifier')
+    parser.add_argument('--port', help = 'name of the port')
+
+    args = parser.parse_args()
+
+    _show_sflow_session(args,parser)
+

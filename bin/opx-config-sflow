@@ -1,0 +1,146 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+from cps_utils import *
+import argparse
+import nas_os_utils
+
+direction_map = {
+                  "ingress": "1",
+                  "egress": "2",
+                  "ingress_egress": "3"
+                }
+
+def commit(obj, op):
+    l = []
+    obj_tup = (op, obj.get())
+    l.append(obj_tup)
+    t = CPSTransaction(l)
+    ret = t.commit()
+    if ret:
+        print "Success"
+    else:
+        print "Failed"
+    return ret
+
+def get_session_id(_if):
+
+    _ifindex = _if
+    if not _if.isdigit():
+        _ifindex = nas_os_utils.if_nametoindex(_if)   
+    
+    obj = CPSObject("base-sflow/entry")
+    get = []
+
+    if cps.get([obj.get()], get):
+        for i in get:
+            obj = CPSObject(obj=i)
+            _read_ifindex = obj.get_attr_data('ifindex')
+
+            if str(_read_ifindex) == str(_ifindex):
+                _id = str(obj.get_attr_data("id"))
+		print "Session Id: " + str(_id)
+		print "\n"             
+                return _id
+    
+    return -1 
+                
+
+def _delete_op(session_id):
+    obj = CPSObject('base-sflow/entry',
+                     data= {"id" : session_id })
+    print obj.get()
+    commit(obj, "delete")
+
+def _create_sflow_session(args, parser):
+
+    if not args.port or not args.direction or not args.rate:
+        print "Please provide all the required (port/direction/rate) attributes"
+        parser.print_help()
+        return
+
+    _session_id = get_session_id(args.port)
+
+    # Check if there is any existing idle session(with rate=0) for the port, then delete that
+    if(_session_id != -1 and args.rate == 0):
+        print "Deleting existing idle session id: "+_session_id+" with port: "+args.port
+        _delete_op(_session_id)
+
+    obj = CPSObject('base-sflow/entry',
+                     data= {"ifindex" : nas_os_utils.if_nametoindex(args.port), 
+                            "direction" : direction_map[args.direction],
+                            "sampling-rate" : args.rate  })
+
+    print obj.get()
+    return commit(obj, "create")
+
+
+def _delete_sflow_session(args,parser):
+
+    if args.id:
+        _session_id = args.id
+
+    elif args.port:
+        _session_id = get_session_id(args.port)
+    
+    else :
+        print "Porvide any of these attributes : id/port"
+        parser.print_help()
+        return
+
+    if(_session_id != -1):
+        print "Deleting sflow session id: "+str(_session_id)
+        _delete_op(_session_id)
+
+def _set_sflow_session(args,parser):
+
+    if not args.id:
+        print "Missing required argument: id"
+        parser.print_help()
+        return
+    
+    obj = CPSObject('base-sflow/entry',
+                     data= {"id" : args.id })
+    print obj.get()
+
+    if args.rate:
+        obj.add_attr("base-sflow/entry/sampling-rate", args.rate)
+
+    if args.direction:
+        obj.add_attr("base-sflow/entry/direction", direction_map[args.direction])
+
+    print obj.get()
+    commit(obj, "set")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'Tool for SFLOW configuration')
+    parser.add_argument('command', choices = ['create', 'delete', 'set'])
+    parser.add_argument('--port', help = 'Name of the port')
+    parser.add_argument('--direction', choices = ['ingress', 'egress', 'ingress_egress'], help = 'Packet sampling direction')
+    parser.add_argument('--rate', type = int, help = 'Sampling rate i.e. one out of --rate no of packets')
+    parser.add_argument('--id', type = int, help = 'Session identifier')
+    
+    args = parser.parse_args()
+
+    if args.command == 'create':
+        _create_sflow_session(args,parser)
+
+    elif args.command == 'set':
+        _set_sflow_session(args,parser)
+
+    elif args.command == 'delete':
+        _delete_sflow_session(args,parser)
+
