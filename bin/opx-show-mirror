@@ -52,6 +52,9 @@ def _show_mirror_session(args, parser):
            if type_map[str(_type)] == "rspan" :
              _vlan = get_req_obj.get_attr_data('base-mirror/entry/vlan')
           
+           if (args.type) and (type_map[str(_type)] != args.type) :
+               continue
+           
            print "\n"
            print '	Id:       	    ' + str(_id)
            print '	Dest Intf:	    ' + if_utl.ifindex_to_name (_dest_intf)
@@ -69,7 +72,8 @@ def _show_mirror_session(args, parser):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Tool for Mirroring show utility')
     parser.add_argument('--id', help='session idenitifier')
-
+    parser.add_argument('--type', choices = ['span', 'rspan'], help = 'Mirroing session type')
+    
     args = parser.parse_args()
 
     _show_mirror_session(args,parser)
