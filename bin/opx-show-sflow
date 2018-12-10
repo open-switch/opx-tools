@@ -75,6 +75,10 @@ def _show_sflow_session(args, parser):
            _rate = get_req_obj.get_attr_data('base-sflow/entry/sampling-rate')
            _ifindex = get_req_obj.get_attr_data('base-sflow/entry/ifindex')
            _ifname = if_utl.ifindex_to_name (_ifindex)
+           
+           if (args.direction) and (direction_map[str(_direction)] != args.direction) :
+               continue
+
            print "\n"
            print '	Id:       	    ' + str(_id)
            print '	Direction:	    ' + direction_map[str(_direction)]
@@ -89,7 +93,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Tool for SFLOW show utility')
     parser.add_argument('--id', help='session idenitifier')
     parser.add_argument('--port', help = 'name of the port')
-
+    parser.add_argument('--direction', choices = ['ingress', 'egress', 'ingress_egress'], help = 'Packet sampling direction')
+    
     args = parser.parse_args()
 
     _show_sflow_session(args,parser)
