@@ -1,0 +1,45 @@
+.TH opx-sflow-interface "1" "2018-12-09" OPX "OPX utilities"
+.SH NAME
+opx-config-sflow \- Configure Sflow feature
+.SH SYNOPSIS
+.SY opx-configure-sflow
+.OP \-h
+.OP \-\-help
+.OP \-\-port PORT
+.OP \-\-direction "\fR( \fBingress\fR | \fBegress\fR  \fBingress_egress\fR )"
+.OP \-\-rate RATE
+.OP \-\-id ID
+.YS
+.SH DESCRIPTION
+This command creates and configures various attributes of a Sflow sessions.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-port 
+Specify front panel Ethernet interface to configure.
+.TP
+\-\-direction ( ingress | egress | ingress_egress )
+Configure the packet sampling direction
+.TP
+\-\-rate
+Configure the Sampling rate. One packet out of <--rate> no of packets to be sampled through this session.
+.TP
+\-\-id
+Set using this session id
+.SH EXIT STATUS
+The exit status is 0 with error log printed.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-sflow create --port e101-019-0 --direction ingress --rate 1000
+$ opx-config-sflow set --id 7 --direction ingress_egress --rate 600
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-sflow(1)
