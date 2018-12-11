@@ -21,7 +21,7 @@ import cps
 import cps_utils
 import cps_object
 
-execfile('./lib.py')
+from opx_tools.opx_config_utils import *
 
 
 intf_rpc_key_id       = 'dell-base-if-cmn/set-interface'

@@ -21,10 +21,7 @@ import cps
 import cps_utils
 import cps_object
 
-execfile('./lib.py')
-
-#import lib
-#from lib import port_range_str_to_port_list
+from opx_tools.opx_config_utils import *
 
 enable_status_map       = {1:'up', 0:'down'}
 oper_status_map         = {1:'up', 2:'down', 3:'testing',4:'unknown',5:'dormant',6:'not-present',7:'lower-layer-down'}

@@ -17,14 +17,11 @@
 import argparse
 import sys
 from argparse import RawDescriptionHelpFormatter
-import nas_common_utils as nas_common
-import nas_os_if_utils as nas_if
 import cps
 import cps_utils
 import cps_object
 
-execfile('./lib.py')
-
+from opx_tools.opx_config_utils import *
 
 admin_status_map        = {1:'up', 2:'down'}
 oper_status_map         = {1:'up', 2:'down', 3:'testing',4:'unknown',5:'dormant',6:'not-present',7:'lower-layer-down'}
