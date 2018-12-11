@@ -1,0 +1,220 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+import sys
+from argparse import RawDescriptionHelpFormatter
+import nas_common_utils as nas_common
+import nas_os_if_utils as nas_if
+import cps
+import cps_utils
+import cps_object
+
+execfile('./lib.py')
+
+vlan_type_map            = {'data':1, 'mgmt':2}
+vlan_type_reverse_map    = {1:'data', 2:'management'}
+vlan_learn_mode_map      = {1:'drop', 2:'disable', 3:'hardware', 4:'cpu_trap', 5:'cpu_log'}
+intf_type                = 'ianaift:l2vlan'
+
+attr_intf_name           = 'if/interfaces/interface/name'
+attr_intf_type           = 'if/interfaces/interface/type'
+attr_intf_desc           = 'if/interfaces/interface/description'
+attr_vlan_obj            = 'dell-base-if-cmn/if/interfaces/interface'
+attr_vlan_id             = 'base-if-vlan/if/interfaces/interface/id'
+attr_vlan_mac            = 'dell-if/if/interfaces/interface/phys-address'
+attr_vlan_tagged_ports   = 'dell-if/if/interfaces/interface/tagged-ports'
+attr_vlan_untagged_ports = 'dell-if/if/interfaces/interface/untagged-ports'
+attr_vlan_type           = 'dell-if/if/interfaces/interface/vlan-type'
+attr_vlan_if_index       = 'dell-base-if-cmn/if/interfaces/interface/if-index'
+attr_vlan_mtu            = 'dell-if/if/interfaces/interface/mtu'
+attr_vlan_learning_mode  = 'dell-if/if/interfaces/interface/learning-mode'
+
+help_str='''This command displays one of the following:
+    - Configuration of the VLAN with the given ID or NAME.
+    - Configuration of all the VLANs of then given TYPE. 
+    - A brief list of information of all the VLANs(when SUMMARY option is used).
+    - An exhaustive list of information of all the VLANs(when no other option is used).
+
+''' 
+
+class cli(object):
+
+    seen_list = []
+
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(prog='opx-show-vlan',
+                                      formatter_class=RawDescriptionHelpFormatter, 
+                                      description=help_str)
+        option=self.parser.add_mutually_exclusive_group()
+        option.add_argument('--id', action='store', help='VLAN ID', type=int)
+        option.add_argument('--name', action='store', help='VLAN Name', type=str)
+        option.add_argument('--ifindex', action='store', help='Interface Index of the VLAN', type=int)
+        option.add_argument('--summary', action='store_true', help='Brief information of all the VLANs')
+        option.add_argument('--type', action='store', help='VLAN type (Data or Management)', 
+                            choices=['data','mgmt'], type=str)
+
+
+    def print_vlan(self, obj):
+        name=cps_key_attr_data_get(obj, attr_intf_name)
+        attrs = [Struct(heading='VLAN ID', 
+                        value=cps_attr_data_get(obj, attr_vlan_id)
+                        ),
+                 Struct(heading='Name',
+                        value=name
+                        ),
+                 Struct(heading='Interface Index',
+                        value=cps_attr_data_get(obj, attr_vlan_if_index)
+                        ),
+                 Struct(heading='Physical Address',
+                        value=cps_attr_data_get(obj, attr_vlan_mac)
+                        ),
+                 Struct(heading='Tagged Ports',
+                        value=cps_attr_data_get(obj, attr_vlan_tagged_ports)
+                        ),
+                 Struct(heading='Untagged Ports',
+                        value=cps_attr_data_get(obj, attr_vlan_untagged_ports)
+                        ),
+                 Struct(heading='Type',
+                        value=cps_attr_data_get(obj, attr_vlan_type),
+                        outmap = vlan_type_reverse_map
+                        ),
+                 Struct(heading='Learning Mode',
+                        value=cps_attr_data_get(obj, attr_vlan_learning_mode),
+                        outmap=vlan_learn_mode_map
+                        ),
+                 Struct(heading='MTU',
+                        value=cps_attr_data_get(obj, attr_vlan_mtu)
+                        )
+                 ]
+        final_attrs = []
+        for item in attrs:
+            if item.value != None:
+                final_attrs.append(item)
+
+        if name not in self.seen_list:
+            self.seen_list.append(name)
+            print_section(0, name, final_attrs)
+
+
+
+    def show_vlans(self, name):
+        args_dict = {}
+
+        if name == 'all':
+            obj_list = cps_get('target',
+                           attr_vlan_obj,
+                           {attr_intf_type: intf_type}
+                          )
+            if obj_list is None or len(obj_list) == 0:
+                self.helper_exit("No VLAN information found")
+            else:
+                for item in obj_list:
+                    self.print_vlan(item)
+
+        else:
+            obj = cps_get('target',
+                          attr_vlan_obj,
+                          {attr_intf_name:name, attr_intf_type: intf_type}
+                         )   
+            if obj is not None:
+                self.print_vlan(obj[0])
+            else:
+                self.helper_exit("No VLAN information found")
+
+
+    def show_vlan_by_ifindex(self, index):
+        obj_list = cps_get('target',
+                           attr_vlan_obj,
+                           {attr_intf_type: intf_type}
+                          )
+        if obj_list is None or len(obj_list) == 0:
+            self.helper_exit("No VLAN information found")
+        else:
+            for item in obj_list:
+                if_index=cps_attr_data_get(item, attr_vlan_if_index)
+                if index == if_index:
+                    self.print_vlan(item)
+                    exit(0)
+
+
+    def show_vlans_by_type(self, type):
+        obj_list = cps_get('target',
+                           attr_vlan_obj,
+                           {attr_intf_type: intf_type}
+                          )
+        if obj_list is None or len(obj_list) == 0:
+            self.helper_exit("No VLAN information found")
+        else:
+            for item in obj_list:
+                vtype=cps_attr_data_get(item, attr_vlan_type)
+                if vtype == vlan_type_map[type]:
+                    self.print_vlan(item)
+
+
+    def show_vlan_summary(self):
+        obj_list = cps_get('target',
+                           attr_vlan_obj,
+                           {attr_intf_type: intf_type}
+                          )
+        summary = []
+        if obj_list is None or len(obj_list) == 0:
+            self.helper_exit("No VLAN information found")
+        else:
+            for item in obj_list:
+                name = cps_key_attr_data_get(item, attr_intf_name)
+                if name not in self.seen_list:
+                    self.seen_list.append(name)
+                    summary+= [[cps_attr_data_get(item, attr_vlan_id),
+                            name,
+                            cps_attr_data_get(item, attr_vlan_type),
+                            cps_attr_data_get(item, attr_vlan_tagged_ports),
+                            cps_attr_data_get(item, attr_vlan_untagged_ports)
+                          ]]
+
+        print_summary(['ID', 'NAME', 'TYPE', 'TAGGED PORTS', 'UNTAGGED PORTS'],
+                      summary,
+                      [None, None, vlan_type_reverse_map, None, None]
+                     )
+
+    def helper_exit(self, Error):
+        print "opx-show-vlan: %s" % Error
+        exit(1)
+
+if __name__ == '__main__':
+    obj = cli()
+
+    # Parsing the command
+    obj.args = obj.parser.parse_args()
+
+    if obj.args.id is not None:
+        name = 'br%s' % obj.args.id
+        obj.show_vlans(name)
+
+    elif obj.args.name is not None:
+        obj.show_vlans(obj.args.name)
+
+    elif obj.args.summary:
+        obj.show_vlan_summary()
+
+    elif obj.args.ifindex is not None:
+        obj.show_vlan_by_ifindex(obj.args.ifindex)
+
+    elif obj.args.type is not None:
+        obj.show_vlans_by_type(obj.args.type)
+
+    else:
+        obj.show_vlans('all')
