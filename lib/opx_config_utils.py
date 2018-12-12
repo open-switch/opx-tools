@@ -224,19 +224,27 @@ def attr_val_to_str(val, fmt=None, map=None, func=None):
     return _attr_val_to_str(val, fmt, map, func)
     
 
-def print_attr(fmt, heading, val, map=None, func=None):
-    heading += ': '
-    sys.stdout.write(fmt.format(heading))
-    sys.stdout.write(attr_val_to_str(val, None, map, func))
-
+_indent_width = 4
+_indent_str   = _indent_width * ' '
 
 def print_indent(lvl):
-    sys.stdout.write(lvl * '\t')
+    sys.stdout.write(lvl * _indent_str)
         
 
 def print_section_attr(lvl, heading, heading_width, val, map=None, func=None, suffix=None):
-    print_indent(lvl)
-    print_attr('{:' + str(heading_width) +'}', heading, val, map, func)
+    heading += ':'
+    ldr = lvl * _indent_str
+    vldr = ldr + heading_width * ' '
+    out = ('{}{:' + str(heading_width - 1) +'}').format(ldr, heading)
+    for w in attr_val_to_str(val, None, map, func).split(' '):
+        out2 = out + ' ' + w
+        if len(out2) > 80:
+            sys.stdout.write(out)
+            print
+            out = vldr + w
+        else:
+            out = out2
+    sys.stdout.write(out)
     if suffix is not None:
         sys.stdout.write(' ')
         sys.stdout.write(suffix)
