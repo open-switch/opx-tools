@@ -178,7 +178,7 @@ class cli(object):
                             cps_attr_data_get(item, attr_vlan_tagged_ports),
                             cps_attr_data_get(item, attr_vlan_untagged_ports)
                           ]]
-        summary.sort(key=lamnda x: x[0])
+        summary.sort(key=lambda x: x[0])
         print_summary(['ID', 'Name', 'Type', 'Tagged ports', 'Untagged ports'],
                       summary,
                       [None, None, vlan_type_reverse_map, None, None]
