@@ -241,67 +241,67 @@ cntrs = [Struct(heading='Alignment errors',
          Struct(heading='Out unicast packets',
                 attr='if/interfaces-state/interface/statistics/out-unicast-pkts'
          ),
-         Struct(heading='Pause rx packets',
+         Struct(heading='Pause rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pause-rx-pkts'
          ),
-         Struct(heading='Pause tx packets',
+         Struct(heading='Pause tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pause-tx-pkts'
          ),
-         Struct(heading='PFC 0 rx packets',
+         Struct(heading='PFC 0 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-0-rx-pkts'
          ),
-         Struct(heading='PFC 0 tx packets',
+         Struct(heading='PFC 0 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-0-tx-pkts'
          ),
-         Struct(heading='PFC 1 rx packets',
+         Struct(heading='PFC 1 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-1-rx-pkts'
          ),
-         Struct(heading='PFC 1 tx packets',
+         Struct(heading='PFC 1 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-1-tx-pkts'
          ),
-         Struct(heading='PFC 2 rx packets',
+         Struct(heading='PFC 2 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-2-rx-pkts'
          ),
-         Struct(heading='PFC 2 tx packets',
+         Struct(heading='PFC 2 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-2-tx-pkts'
          ),
-         Struct(heading='PFC 3 rx packets',
+         Struct(heading='PFC 3 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-3-rx-pkts'
          ),
-         Struct(heading='PFC 3 tx packets',
+         Struct(heading='PFC 3 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-3-tx-pkts'
          ),
-         Struct(heading='PFC 4 rx packets',
+         Struct(heading='PFC 4 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-4-rx-pkts'
          ),
-         Struct(heading='PFC 4 tx packets',
+         Struct(heading='PFC 4 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-4-tx-pkts'
          ),
-         Struct(heading='PFC 5 rx packets',
+         Struct(heading='PFC 5 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-5-rx-pkts'
          ),
-         Struct(heading='PFC 5 tx packets',
+         Struct(heading='PFC 5 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-5-tx-pkts'
          ),
-         Struct(heading='PFC 6 rx packets',
+         Struct(heading='PFC 6 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-6-rx-pkts'
          ),
-         Struct(heading='PFC 6 tx packets',
+         Struct(heading='PFC 6 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-6-tx-pkts'
          ),
-         Struct(heading='PFC 7 rx packets',
+         Struct(heading='PFC 7 rx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-7-rx-pkts'
          ),
-         Struct(heading='PFC 7 tx packets',
+         Struct(heading='PFC 7 tx frames',
                 attr='dell-if/if/interfaces-state/interface/statistics/pfc-7-tx-pkts'
          ),
          Struct(heading='RED discard dropped packets',
                 attr='dell-if/if/interfaces-state/interface/statistics/red-discard-dropped-packets'
          ),
-         Struct(heading='Rx lpi count',
+         Struct(heading='Rx LPI count',
                 attr='dell-if/if/interfaces-state/interface/statistics/rx-lpi-count'
          ),
-         Struct(heading='Rx lpi duration',
+         Struct(heading='Rx LPI duration',
                 attr='dell-if/if/interfaces-state/interface/statistics/rx-lpi-duration'
          ),
          Struct(heading='Single collision frames',
@@ -316,10 +316,10 @@ cntrs = [Struct(heading='Alignment errors',
          Struct(heading='Time stamp',
                 attr='dell-base-if-cmn/if/interfaces-state/interface/statistics/time-stamp'
          ),
-         Struct(heading='Tx lpi count',
+         Struct(heading='Tx LPI count',
                 attr='dell-if/if/interfaces-state/interface/statistics/tx-lpi-count'
          ),
-         Struct(heading='Tx lpi duration',
+         Struct(heading='Tx LPI duration',
                 attr='dell-if/if/interfaces-state/interface/statistics/tx-lpi-duration'
          ),
          Struct(heading='Yellow discard dropped packets',
