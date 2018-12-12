@@ -1,0 +1,191 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+import sys
+import cps
+import cps_utils
+import nas_ut_framework as nas_ut
+import nas_os_utils
+import cps_object
+import nas_os_if_utils as nas_if
+import nas_common_utils as nas_common
+import os
+from cps_utils import *
+import sys
+import nas_os_utils
+
+intf_rpc_key_id = 'vrf-mgmt/intf-bind-ni/input'
+intf_rpc_key_attr = 'vrf-mgmt/intf-bind-ni/input/interface'
+vrf_rpc_key_id = 'ni/network-instances/network-instance'
+intf_rpc_op_attr_id = 'ni/network-instances/network-instance/'
+vrf_name_attr_id = 'ni/network-instances/network-instance/name'
+intf_mgmt_key_id = 'ni/if/interfaces/interface'
+intf_mgmt_key_attr_id = 'ni/if/interfaces/interface'
+intf_name_mgmt_attr_id= 'if/interfaces/interface/name'
+vrf_show_attr_id = 'ni/network-instances'
+intf_rpc_op_type_map = {'create': 1, 'delete': 2, 'set': 3, 'unset':4}
+mgmt_rpc_op_type_map = {'set':'create','unset':'delete'}
+
+
+
+def nas_vrf_op(op, data_dict):
+    obj_list = []
+    commit_changes = False
+    try:
+        if op == 'get':
+            obj = cps_object.CPSObject( vrf_show_attr_id, data=data_dict)
+        else:
+            if op in intf_rpc_op_type_map:
+                data_dict[intf_rpc_op_attr_id] = intf_rpc_op_type_map[op]
+            else:
+                print 'Unknown operation type %s' % op
+                return False
+
+            if op == "create":
+                obj = cps_object.CPSObject(vrf_rpc_key_id, data=data_dict)
+                if data_dict[vrf_name_attr_id] == 'management' and data_dict[intf_name_mgmt_attr_id] != []:
+                    commit_changes = commit(op, obj)
+                    obj = cps_object.CPSObject(intf_mgmt_key_attr_id, data=data_dict)
+                elif data_dict[intf_rpc_key_attr] != []:
+                    commit_changes = commit(op, obj)
+                    obj_list = _port_obj_list(intf_rpc_key_id,data_dict)
+                    op = 'rpc'
+                else:
+                    pass
+
+            elif op == "set" or op == 'unset':
+                if data_dict[vrf_name_mgmt_id] == 'management' and data_dict[intf_mgmt_attr_id] != []:
+                    obj = cps_object.CPSObject(intf_mgmt_key_attr_id, data=data_dict)
+                    op = mgmt_rpc_op_type_map[op]
+                else:
+                    obj_list = _port_obj_list(intf_rpc_key_id,data_dict)
+                    op = 'rpc'
+
+            else:
+                obj = cps_object.CPSObject(vrf_rpc_key_id, data=data_dict)
+
+        if obj_list != []:
+            for obj in obj_list:
+                commit_changes = commit(op, obj)
+                if commit_changes == False:
+                    break
+        elif op == 'get':
+            nas_common.get_cb_method(op)(obj)
+        else:
+            commit_changes = commit(op,obj)
+
+        if commit_changes != False:
+            print "Configuration Successful..."
+
+    except ValueError:
+        print "Configuration Error"
+
+
+
+name_attr_id = 'ni/network-instances/network-instance/name'
+intf_attr_id = 'vrf-mgmt/intf-bind-ni/input/interface'
+vrf_name_port_id = 'vrf-mgmt/intf-bind-ni/input/ni-name'
+vrf_intf_operation_type = 'vrf-mgmt/intf-bind-ni/input/operation'
+intf_mgmt_attr_id = 'if/interfaces/interface/name'
+vrf_name_mgmt_id = 'ni/if/interfaces/interface/bind-ni-name'
+
+
+def commit(op, obj):
+    l = []
+    obj_tup = (op, obj.get())
+    l.append(obj_tup)
+    t = CPSTransaction(l)
+    ret = t.commit()
+    if ret == False:
+        print "Configuration Failed..."
+    else:
+        pass
+    return ret
+
+def _port_name_list(ports):
+    l = []
+    port_list = str.split(ports, ",")
+    for port in port_list:
+        l.append((port.strip()))
+    return l
+
+def _port_obj_list(attr,data_dict):
+    nas_obj_list = []
+    int_list = data_dict[intf_attr_id]
+    for ports in int_list:
+        data_dict[intf_attr_id] = ports
+        obj = cps_object.CPSObject(attr, data=data_dict)
+        nas_obj_list.append(obj)
+    return nas_obj_list
+
+
+
+
+# Calling the main method
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='configure static route')
+    parser.add_argument("op", help="operation to perform", choices=['create','delete','show','help','addport','removeport'], default='help')
+    parser.add_argument("--vrf", help="new vrf name", default='')
+    parser.add_argument("--ports", help="ports", default='')
+    parser.add_argument("--show", help="List names of existing VRFs", action='store_true',  default=False)
+    args = vars(parser.parse_args())
+    print "args",args
+    #main(args)
+
+    choice = args['op']
+    print "choice is", choice
+    ports = args['ports']
+    print "ports is", ports
+    vrf_name = args['vrf']
+    print "vrf", vrf_name
+
+    if choice == 'create' and vrf_name != '':
+	print "creating vrf"
+        ifname_list = []
+        if ports != '':
+            ifname_list = _port_name_list(ports)
+        if vrf_name == 'management':
+            nas_vrf_op("create", {name_attr_id: vrf_name, vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list,intf_attr_id:[]})
+        else:
+            nas_vrf_op("create", {name_attr_id: vrf_name, vrf_name_port_id:vrf_name ,intf_attr_id: ifname_list, vrf_intf_operation_type: 1 })
+
+    elif choice == 'delete' and vrf_name != '':
+        nas_vrf_op("delete", {name_attr_id: vrf_name})
+
+    elif choice == 'addport' and vrf_name != '' and ports != '':
+        ifname_list = _port_name_list(ports)
+        if vrf_name == 'management':
+            nas_vrf_op("set", {vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list})
+        else:
+            nas_vrf_op("set", {vrf_name_port_id: vrf_name, intf_attr_id: ifname_list, vrf_intf_operation_type: 1, vrf_name_mgmt_id:[], intf_mgmt_attr_id:[]})
+
+    elif choice == 'removeport' and vrf_name != '' and ports != '':
+        ifname_list = _port_name_list(ports)
+        if vrf_name == 'management':
+            nas_vrf_op("unset", {vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list})
+        else:
+            nas_vrf_op("set", {vrf_name_port_id: vrf_name, intf_attr_id: ifname_list, vrf_intf_operation_type: 2, vrf_name_mgmt_id:[], intf_mgmt_attr_id:[]})
+
+    elif choice == 'show':
+        if vrf_name != '':
+            nas_vrf_op("get", {name_attr_id: vrf_name})
+        else:
+            nas_vrf_op("get", {})
+
+    else:
+        print "select proper option"
+        sys.exit(0)
