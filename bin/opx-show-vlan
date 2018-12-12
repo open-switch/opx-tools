@@ -74,23 +74,23 @@ class cli(object):
                  Struct(heading='Name',
                         value=name
                         ),
-                 Struct(heading='Interface Index',
+                 Struct(heading='Interface index',
                         value=cps_attr_data_get(obj, attr_vlan_if_index)
                         ),
-                 Struct(heading='Physical Address',
+                 Struct(heading='Physical address',
                         value=cps_attr_data_get(obj, attr_vlan_mac)
                         ),
-                 Struct(heading='Tagged Ports',
+                 Struct(heading='Tagged ports',
                         value=cps_attr_data_get(obj, attr_vlan_tagged_ports)
                         ),
-                 Struct(heading='Untagged Ports',
+                 Struct(heading='Untagged ports',
                         value=cps_attr_data_get(obj, attr_vlan_untagged_ports)
                         ),
                  Struct(heading='Type',
                         value=cps_attr_data_get(obj, attr_vlan_type),
                         outmap = vlan_type_reverse_map
                         ),
-                 Struct(heading='Learning Mode',
+                 Struct(heading='Learning mode',
                         value=cps_attr_data_get(obj, attr_vlan_learning_mode),
                         outmap=vlan_learn_mode_map
                         ),
@@ -98,14 +98,10 @@ class cli(object):
                         value=cps_attr_data_get(obj, attr_vlan_mtu)
                         )
                  ]
-        final_attrs = []
-        for item in attrs:
-            if item.value != None:
-                final_attrs.append(item)
 
         if name not in self.seen_list:
             self.seen_list.append(name)
-            print_section(0, name, final_attrs)
+            print_section(0, name, attrs)
 
 
 
@@ -182,8 +178,8 @@ class cli(object):
                             cps_attr_data_get(item, attr_vlan_tagged_ports),
                             cps_attr_data_get(item, attr_vlan_untagged_ports)
                           ]]
-
-        print_summary(['ID', 'NAME', 'TYPE', 'TAGGED PORTS', 'UNTAGGED PORTS'],
+        summary.sort(key=lamnda x: x[0])
+        print_summary(['ID', 'Name', 'Type', 'Tagged ports', 'Untagged ports'],
                       summary,
                       [None, None, vlan_type_reverse_map, None, None]
                      )

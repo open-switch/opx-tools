@@ -108,54 +108,46 @@ class cli(object):
                  Struct(heading='Name',
                         value=name
                         ),
-                 Struct(heading='Interface Index',
+                 Struct(heading='Interface index',
                         value=cps_key_attr_data_get(cfg_obj, attr_intf_if_index)
                         ),
-                 Struct(heading='Physical Address',
+                 Struct(heading='Physical address',
                         value=cps_attr_data_get(cfg_obj, attr_intf_mac)
                         ),
                  Struct(heading='Number of ports',
                         value=cps_attr_data_get(state_obj, attr_lag_num_ports)
                         ),
-                 Struct(heading='Member Ports',
+                 Struct(heading='Member ports',
                         value=self.get_members(cfg_obj['data'])
                         ),
-                 Struct(heading='Blocked Ports',
+                 Struct(heading='Blocked ports',
                         value=cps_attr_data_get(cfg_obj, attr_lag_blocked_ports)
                         ),
-                 Struct(heading='Un-blocked Ports',
+                 Struct(heading='Un-blocked ports',
                         value=cps_attr_data_get(cfg_obj, attr_lag_unblocked_ports)
                         ),
-                 Struct(heading='LAG Port State',
+                 Struct(heading='LAG port state',
                         value=cps_attr_data_get(cfg_obj, attr_lag_port_state)
                         ),
-                 Struct(heading='Learning Mode',
+                 Struct(heading='Learning mode',
                         value=cps_attr_data_get(state_obj, attr_lag_learn_mode),
                         outmap=lag_learn_mode_map
                         ),
                  Struct(heading='MTU',
                         value=cps_attr_data_get(cfg_obj, attr_intf_mtu)
                         ),
-                 Struct(heading='Admin State',
+                 Struct(heading='Admin state',
                         value=cps_attr_data_get(state_obj, attr_intf_state_admin),
                         outmap=admin_status_map
                         ),
-                 Struct(heading='Oper State',
+                 Struct(heading='Oper state',
                         value=cps_attr_data_get(state_obj, attr_intf_state_oper),
                         outmap=oper_status_map
-                        ),
-                 Struct(heading='LAG Opaque Data',
-                        value=cps_attr_data_get(cfg_obj, attr_lag_opaque_data)
                         )
                  ]
-        final_attrs = []
-        for item in attrs:
-            if item.value != None:
-                final_attrs.append(item)
-
         if name not in self.seen_list:
             self.seen_list.append(name)
-            print_section(0, name, final_attrs)
+            print_section(0, name, attrs)
 
 
 
@@ -234,8 +226,8 @@ class cli(object):
                                cps_attr_data_get(state_obj, attr_intf_state_oper)
                                ]
                               )
-
-        print_summary(['IFINDEX', 'NAME', 'MEMBER PORTS', 'ADMIN STATE', 'OPER STATE'],
+        summary.sort(key=lambda x: x[0])
+        print_summary(['Ifindex', 'Name', 'Member ports', 'Admin state', 'Oper state'],
                       summary,
                       [None, None, None, admin_status_map, oper_status_map]
                      )
