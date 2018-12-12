@@ -16,6 +16,7 @@
 from cps_utils import *
 import argparse
 import nas_os_utils
+import sys
 
 direction_map = {
                   "ingress": "1",
@@ -28,16 +29,19 @@ mirror_type_map = {
                   "rspan": "2"
                 }
 
+def _exit(level, Error):
+    print "opx-config-mirror: %s" % Error
+    sys.exit(level)
+
 def commit(obj, op):
     l = []
     obj_tup = (op, obj.get())
     l.append(obj_tup)
     t = CPSTransaction(l)
     ret = t.commit()
-    if ret:
-        print "Success"
-    else:
-        print "Failed"
+    if not ret:
+        print obj.get()
+        _exit(2, "Commit failed")
     return ret
 
 def add_mirror_src_direction(obj, intf, dir):
@@ -52,14 +56,13 @@ def add_mirror_src_direction(obj, intf, dir):
 def _create_mirror_session(args, parser):
 
     if not args.src_intf or not args.dest_intf or not args.type or not args.direction:
-        print "Please provide all the required (src_intf/dest_intf/type/direction"
         parser.print_help()
-        return
+        _exit(1, "Missing required attributes (src_intf/dest_intf/type/direction)")
 
     if args.type == "rspan" and not args.vlan :
-       print "VLAN attribute is mandatory for rspan session"
        parser.print_help()
-       return
+       _exit(1, "VLAN attribute is mandatory for rspan session")
+    
     else :
        _vlan = args.vlan
 
@@ -72,37 +75,32 @@ def _create_mirror_session(args, parser):
     if _vlan :
        obj.add_attr("vlan", _vlan)
 
-    print obj.get()
     return commit(obj, "create")
 
 
 def _delete_mirror_session(args,parser):
 
     if not args.id:
-        print "Missing argument: id"
         parser.print_help()
-        return
+        _exit(1, "Missing argument: id")
     
     obj = CPSObject('base-mirror/entry',
                      data= {"id" : args.id })
 
-    print obj.get()
     commit(obj, "delete")
 
 def _set_mirror_session(args,parser):
 
     if not args.id:
-        print "Missing required argument: id"
         parser.print_help()
-        return
+        _exit(1, "Missing required argument: id")
     
     obj = CPSObject('base-mirror/entry',
                      data= {"id" : args.id })
 
     if (args.src_intf and not args.direction) or (args.direction and not args.src_intf) :
-        print "Mandatory attributes are missing : src_intf, direction"
         parser.print_help()
-        return
+        _exit(1, "Mandatory attributes are missing : src_intf, direction")
     
     if args.src_intf :
         add_mirror_src_direction(obj, args.src_intf, args.direction)
@@ -113,7 +111,6 @@ def _set_mirror_session(args,parser):
     if args.vlan :
         obj.add_attr("vlan", args.vlan) 
     
-    print obj.get()
     commit(obj, "set")
 
 
