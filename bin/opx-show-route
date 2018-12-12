@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+
+import cps
+import cps_utils
+import socket
+import netaddr as net
+import cps_object
+import bytearray_utils as ba_utils
+import argparse
+from opx_tools.opx_config_utils import *
+
+def vrf_view_routes(vrf):
+    print "\n--> VRF:",vrf
+    result=[]
+    l=[]
+    obj=cps_object.CPSObject('base-route/obj/entry', data={'base-route/obj/vrf-name':vrf})
+    cps.get([obj.get()],l)
+    for entry in l:
+        dst_address=get_ip_addr_str(str(entry['data']['base-route/obj/entry/route-prefix']))
+        try:
+            nh_addr=get_ip_addr_str(str(entry['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/nh-addr']))
+        except:
+            nh_addr="None"
+        try:
+            iface=str(entry['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/ifname'])
+        except:
+            iface="None"
+        result += [[dst_address,nh_addr,iface]]
+    return result
+
+def get_vrf_names():
+    obj=cps_object.CPSObject('ni/network-instances') 	
+    l=[]
+    vrf_list=[]
+    cps.get([obj.get()],l)
+    for entry in l:
+        vrf=entry['data']['ni/network-instances/network-instance/name']
+        vrf_list.append(vrf)
+    return vrf_list
+
+def get_ip_addr_str(data):
+    try:
+        return ba_utils.ba_to_ipv4str('', data)
+    except:
+        return ba_utils.ba_to_ipv6str('', data)
+
+def get_all_routes():
+    vrf_list=get_vrf_names()
+    for vrf in vrf_list:
+            result=vrf_view_routes(vrf)
+            print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='configure static route')
+    parser.add_argument("--all", action="store_true", help="view all routes", default=False)
+    parser.add_argument("--vrf", help="view specific vrf routes", default='')
+    args = parser.parse_args()
+    if args.all or args.vrf == '':	
+        get_all_routes()
+    if args.vrf:
+        vrf_view_routes(args.vrf)	
+

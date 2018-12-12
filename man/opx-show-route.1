@@ -1,0 +1,35 @@
+.TH opx-config-route "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-show-route \- Show static route
+.SH SYNOPSIS
+.SY opx-config-route
+.OP \-h
+.OP \-\-help
+.OP \-\-vrf VRF name
+.OP \-\-all 
+.YS
+.SH DESCRIPTION
+This command displays static routes in the existing namespaces(VRF). 
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-vrf \ vrf
+VRF name
+.TP
+.RI --all
+Display static routes in all namespaces(VRFs)
+.SH EXAMPLE
+.nf
+.eo
+$ opx-show-route --vrf blue 
+$ opx-show-route --all
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-route(1)

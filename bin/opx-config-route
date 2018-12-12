@@ -1,0 +1,128 @@
+#!/usr/bin/python
+# Copyright (c) 2015 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import argparse
+import cps_utils
+import socket
+import nas_ut_framework as nas_ut
+import nas_route_utils as nas_route
+import netaddr as net
+import time
+from netaddr import *
+'''
+Note: User need to install the python-netaddr
+      package to use this script
+'''
+
+
+IPV4_PREFIX_LEN = 24
+IPV6_PREFIX_LEN = 64
+
+def build_route_obj(vrf, route_prefix, prefix_len, version):
+    print "version is:", version #ipv4/ipv6
+
+    obj = cps_utils.CPSObject(nas_route.get_route_key()[int(0)])
+    print nas_route.get_route_key()[int(0)]
+
+    obj.add_attr("base-route/obj/vrf-name", vrf)
+    if version == 'ipv4':
+        obj.add_attr("af", socket.AF_INET)
+    elif version == 'ipv6':
+        obj.add_attr("af", socket.AF_INET6)
+    else:
+        print "wrong ip format entered"
+
+    obj.add_attr_type("route-prefix", version)
+    obj.add_attr("route-prefix", str(route_prefix))
+    obj.add_attr("prefix-len", int(prefix_len))
+
+    return obj
+
+
+def add_embd_param(obj, outer_param, inner_param, val_list, type=''):
+    count = int(0)
+    el = []
+    el.append(outer_param)
+    for val in val_list:
+        el.append(str(count))
+        el.append(inner_param)
+        if type != '':
+            param_list = []
+            param_list.append(outer_param)
+            param_list.append(inner_param)
+            obj.add_attr_type(param_list, type)
+        obj.add_embed_attr(el, val)
+        count = count + 1
+        del el[1:]
+
+
+def nas_route_op(op, obj, ver):
+    nas_route.init(ver)
+    nas_ut.get_cb_method(op)(obj)
+
+
+# Calling the main method
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Configure static route')
+    parser.add_argument("command", choices=['create','del','set'])
+    parser.add_argument("--vrf", help="Existing vrf name", default='default')
+    parser.add_argument("--nh", help="Next hop ip addresses", default='')
+    parser.add_argument("--dst", help="Dest address (10.1.1.1/24) or 20.1.1.1", default='')
+    args = vars(parser.parse_args())
+    print "args:", args
+    op = args['command']
+    ip_addr = args['dst']
+    vrf = args['vrf'] 
+    nh_ip_addr = args['nh']
+    nh_ip_list = str.split(nh_ip_addr)
+    num_of_routes = 1
+    if ip_addr != '':
+        version, prefix_len, route_prefix = nas_route.extract_ip_netmask(ip_addr)
+        version = 'ipv' + str(version)
+
+    if op == 'create' and ip_addr != '' and nh_ip_addr != '':
+        start = time.time()
+        for i in range(0,int(num_of_routes)):
+            cps_obj = build_route_obj(vrf, route_prefix, prefix_len, version)
+            add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
+            cps_obj.add_attr("nh-count", len(nh_ip_list))
+            nas_route_op("create", cps_obj, version)
+            if (version == 'ipv6'):
+                route_prefix += 2**(128-prefix_len)
+            else:
+                route_prefix += 2**(32-prefix_len)
+        end = time.time()
+        print 'Total time for adding %d routes = %f seconds' % (int (num_of_routes),(end - start))
+
+    elif op == 'set'and ip_addr != '' and nh_ip_addr != '':
+        cps_obj = build_route_obj(vrf,route_prefix, prefix_len, version)
+        add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
+        cps_obj.add_attr("nh-count", len(nh_ip_list))
+        nas_route_op("set", cps_obj, version)
+
+    elif op == 'del'and ip_addr != '':
+        start = time.time()
+        for i in range(0,int(num_of_routes)):
+            cps_obj = build_route_obj(vrf, route_prefix, prefix_len, version)
+            add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
+            cps_obj.add_attr("nh-count", len(nh_ip_list))
+            nas_route_op("delete", cps_obj, version)
+            if (version == 'ipv6'):
+                route_prefix += 2**(128-prefix_len)
+            else:
+                route_prefix += 2**(32-prefix_len)
+        end = time.time()
+        print 'Total time for deleting %d routes = %f seconds' % (int (num_of_routes),(end - start))
