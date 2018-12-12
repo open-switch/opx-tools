@@ -29,7 +29,9 @@ Configure the Sampling rate. One packet out of <--rate> no of packets to be samp
 \-\-id
 Set using this session id
 .SH EXIT STATUS
-The exit status is 0 with error log printed.
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
 .SH EXAMPLE
 .nf
 .eo

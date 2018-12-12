@@ -40,7 +40,9 @@ to be transported across multiple switches
 \-\-type ( span | rspan )
 Configure the Mirroring session type.
 .SH EXIT STATUS
-The exit status is 0 with error log printed.
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
 .SH EXAMPLE
 .nf
 .eo

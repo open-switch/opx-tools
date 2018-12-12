@@ -40,29 +40,23 @@ Displays the port name of the destination interface
 VLAN
 Displays the RSPAN VLAN id
 .SH EXIT STATUS
-The exit status is 0 with error log printed.
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
 .SH EXAMPLE
 .nf
 .eo
-$  root@OPX:~# opx-show-mirror --type rspan
+$opx-show-mirror --summary
+Session ID | Dest Interface | Type  | VLAN
+------------------------------------------
+2          | e101-004-0     | rspan | 600
+1          | e101-002-0     | span  | 600
 
-
-        Id:                 3
-        Dest Intf:          e101-010-0
-        Src Intf:           e101-001-0
-        Direction:          ingress
-        Type:               rspan
-        VLAN:               700
-
-
-
-
-        Id:                 2
-        Dest Intf:          e101-006-0
-        Src Intf:           e101-002-0
-        Direction:          ingress
-        Type:               rspan
-        VLAN:               800
+$opx-show-mirror --id 2
+Session ID=2
+        Destination Interface: e101-004-0
+        Type:                  rspan
+        VLAN:                  600
 
 .ec
 .fi

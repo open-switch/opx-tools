@@ -38,17 +38,24 @@ Displays the Sampling rate. One packet out of <Rate> no of packets to be sampled
 Port
 Displays the front panel Ethernet interface the session is enabled on.
 .SH EXIT STATUS
-The exit status is 0 with error log printed.
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
 .SH EXAMPLE
 .nf
 .eo
-$ opx-show-sflow --id 2
+$opx-show-sflow --summary
+Session ID | Direction | Rate  | Port
+-------------------------------------------
+2          | egress    | 14000 | e101-012-0
+1          | ingress   | 10000 | e101-010-0
 
+$opx-show-sflow --id 2
+Session ID=2
+        Direction: egress
+        Rate:      14000
+        Port:      e101-012-0
 
-        Id:                 2
-        Direction:          egress
-        Rate:               1000
-        Port:               e101-021-0
 .ec
 .fi
 .SH REPORTING BUGS
