@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (c) 2015 Dell Inc.
+# Copyright (c) 2018 Dell Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -76,16 +76,18 @@ def nas_route_op(op, obj, ver):
 
 # Calling the main method
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Configure static route')
-    parser.add_argument("command", choices=['create','del','set'])
-    parser.add_argument("--vrf", help="Existing vrf name", default='default')
-    parser.add_argument("--nh", help="Next hop ip addresses", default='')
-    parser.add_argument("--dst", help="Dest address (10.1.1.1/24) or 20.1.1.1", default='')
+    parser = argparse.ArgumentParser(description='Configure static route', formatter_class=argparse.RawTextHelpFormatter)
+    parser.epilog="Example:\n(1)opx-config-route create --vrf default --dst 192.168.10.2/24 --nh '127.0.0.1 127.0.0.2' \
+                            \n(2)opx-config-route del --vrf default --dst 192.168.10.2\n"	
+    parser.add_argument("command", choices=['create','delete','set'])
+    parser.add_argument("--vrf_name", help="existing VRF name", default='default')
+    parser.add_argument("--nh", help="next hop ip addresses(seperated by space)", default='')
+    parser.add_argument("--dst", help="destination address", default='')
     args = vars(parser.parse_args())
     print "args:", args
     op = args['command']
     ip_addr = args['dst']
-    vrf = args['vrf'] 
+    vrf = args['vrf_name'] 
     nh_ip_addr = args['nh']
     nh_ip_list = str.split(nh_ip_addr)
     num_of_routes = 1
@@ -101,9 +103,9 @@ if __name__ == "__main__":
             cps_obj.add_attr("nh-count", len(nh_ip_list))
             nas_route_op("create", cps_obj, version)
             if (version == 'ipv6'):
-                route_prefix += 2**(128-prefix_len)
+                    route_prefix += 2**(128-prefix_len)
             else:
-                route_prefix += 2**(32-prefix_len)
+                    route_prefix += 2**(32-prefix_len)
         end = time.time()
         print 'Total time for adding %d routes = %f seconds' % (int (num_of_routes),(end - start))
 
@@ -113,7 +115,7 @@ if __name__ == "__main__":
         cps_obj.add_attr("nh-count", len(nh_ip_list))
         nas_route_op("set", cps_obj, version)
 
-    elif op == 'del'and ip_addr != '':
+    elif op == 'delete'and ip_addr != '':
         start = time.time()
         for i in range(0,int(num_of_routes)):
             cps_obj = build_route_obj(vrf, route_prefix, prefix_len, version)
@@ -121,8 +123,8 @@ if __name__ == "__main__":
             cps_obj.add_attr("nh-count", len(nh_ip_list))
             nas_route_op("delete", cps_obj, version)
             if (version == 'ipv6'):
-                route_prefix += 2**(128-prefix_len)
+                    route_prefix += 2**(128-prefix_len)
             else:
-                route_prefix += 2**(32-prefix_len)
+                    route_prefix += 2**(32-prefix_len)
         end = time.time()
         print 'Total time for deleting %d routes = %f seconds' % (int (num_of_routes),(end - start))
