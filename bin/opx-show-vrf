@@ -88,9 +88,9 @@ def get_ip_addr_str(data):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='configure static route')
-	parser.add_argument("--name", help="View specific vrf details")
-	parser.add_argument("--list", help="List VRF names", action='store_true',  default=False)
-	parser.add_argument("--summary", help="Summarized VRF detail", action='store_true',  default=False)
+	parser.add_argument("--name", help="view specific VRF details")
+	parser.add_argument("--list", help="list VRF names", action='store_true',  default=False)
+	parser.add_argument("--summary", help="summarized VRF detail", action='store_true',  default=False)
 	
 	args = parser.parse_args()
 	if args.name==None and args.list==False and args.summary==False:

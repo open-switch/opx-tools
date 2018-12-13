@@ -177,12 +177,6 @@ if __name__ == "__main__":
         else:
             nas_vrf_op("set", {vrf_name_port_id: vrf_name, intf_attr_id: ifname_list, vrf_intf_operation_type: 2, vrf_name_mgmt_id:[], intf_mgmt_attr_id:[]})
 
-    elif choice == 'show':
-        if vrf_name != '':
-            nas_vrf_op("get", {name_attr_id: vrf_name})
-        else:
-            nas_vrf_op("get", {})
-
     else:
-        print "select proper option"
+        print "Wrong argument given"
         sys.exit(0)
