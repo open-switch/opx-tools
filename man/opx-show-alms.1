@@ -1,0 +1,31 @@
+.TH opx-show-alms "1" "2018-06-11" OPX "OPX utilities"
+.SH NAME
+opx-show-alms \- Show active alarms
+.SH SYNOPSIS
+\fBopx-show-alms\fR
+.SH DESCRIPTION
+This command shows the currently active alarms.
+.PP
+Alarms are displayed in the form:
+.PP
+\fItimestamp1 message1\fR
+.br
+\fItimestamp2 message2\fR
+.br
+\&...
+.br
+\fItimestampN messageN\fR
+.PP
+where \fItimestamp\fR indicates when the condition occurred.
+.SH EXAMPLE
+root@OPX:/# opx-show-alms 
+.br
+2018-06-12 11:11:39.607066	PSU 1 absent
+.br
+2018-06-12 11:12:04.805768	Fan tray 2 absent
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+\(co 2018 Dell Inc. or its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-alm-service(1)
