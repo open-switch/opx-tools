@@ -94,7 +94,6 @@ def nas_vrf_op(op, data_dict):
         print "Configuration Error"
 
 
-
 name_attr_id = 'ni/network-instances/network-instance/name'
 intf_attr_id = 'vrf-mgmt/intf-bind-ni/input/interface'
 vrf_name_port_id = 'vrf-mgmt/intf-bind-ni/input/ni-name'
@@ -132,14 +131,12 @@ def _port_obj_list(attr,data_dict):
     return nas_obj_list
 
 
-
-
 # Calling the main method
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='configure static route')
-    parser.add_argument("op", help="operation to perform", choices=['create','delete','show','help','addport','removeport'], default='help')
-    parser.add_argument("--vrf", help="new vrf name", default='')
+    parser.add_argument("op", help="operation to perform", choices=['create','delete','add','remove'], default='help')
+    parser.add_argument("--name", help="VRF name", default='')
     parser.add_argument("--ports", help="ports", default='')
     parser.add_argument("--show", help="List names of existing VRFs", action='store_true',  default=False)
     args = vars(parser.parse_args())
@@ -150,7 +147,7 @@ if __name__ == "__main__":
     print "choice is", choice
     ports = args['ports']
     print "ports is", ports
-    vrf_name = args['vrf']
+    vrf_name = args['name']
     print "vrf", vrf_name
 
     if choice == 'create' and vrf_name != '':
@@ -166,14 +163,14 @@ if __name__ == "__main__":
     elif choice == 'delete' and vrf_name != '':
         nas_vrf_op("delete", {name_attr_id: vrf_name})
 
-    elif choice == 'addport' and vrf_name != '' and ports != '':
+    elif choice == 'add' and vrf_name != '' and ports != '':
         ifname_list = _port_name_list(ports)
         if vrf_name == 'management':
             nas_vrf_op("set", {vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list})
         else:
             nas_vrf_op("set", {vrf_name_port_id: vrf_name, intf_attr_id: ifname_list, vrf_intf_operation_type: 1, vrf_name_mgmt_id:[], intf_mgmt_attr_id:[]})
 
-    elif choice == 'removeport' and vrf_name != '' and ports != '':
+    elif choice == 'remove' and vrf_name != '' and ports != '':
         ifname_list = _port_name_list(ports)
         if vrf_name == 'management':
             nas_vrf_op("unset", {vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list})
