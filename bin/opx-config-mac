@@ -15,6 +15,7 @@
 
 from cps_utils import *
 import argparse
+import sys
 
 flush_type_map = {
                 "port": 1,
@@ -126,8 +127,8 @@ if __name__ == '__main__':
     parser.add_argument('--port', help = 'Name of the port')
     parser.add_argument('--vlan',type = int,  help = 'vlan id')
     parser.add_argument('--static',action='store_true',  default=False, help = 'Static entry')
-    parser.add_argument('--kernel_conf',action='store_true',  default=False, help = 'Configure the entry into OS (with NPU)')
-    parser.add_argument('--kernel_conf_only',action='store_true',  default=False, help = 'Configure the entry into OS only (not in NPU)')
+    parser.add_argument('--kernel_conf',action='store_true',  default=False, help = 'Configure the entry into kernel (with NPU)')
+    parser.add_argument('--kernel_conf_only',action='store_true',  default=False, help = 'Configure the entry into kernel only (not in NPU)')
     parser.add_argument('--delete-type',choices = ["single","all","filter"],
                         help = 'Delete options')
 

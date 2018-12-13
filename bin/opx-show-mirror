@@ -68,6 +68,7 @@ def _show_mirror_session(args, parser):
 
            # For summary output
            if (args.summary) :
+              summary.sort(key=lambda x: x[0])
               summary+= [[str(_id),
                            if_utl.ifindex_to_name (_dest_intf),
                            type_map[str(_type)],
@@ -84,7 +85,7 @@ def _show_mirror_session(args, parser):
                                 Struct(heading='VLAN',
                                        value=_vlan)
                                ]
-              print_section(0, "Session ID=" + str(_id), section_attrs)
+              print_section(0, "Session ID " + str(_id), section_attrs)
 
         # For summary output
         if (args.summary) :

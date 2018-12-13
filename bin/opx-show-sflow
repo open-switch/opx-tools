@@ -111,10 +111,11 @@ def _show_sflow_session(args, parser):
                                        value=_ifname
                                       ),
                                ]
-              print_section(0, "Session ID=" + str(_id), section_attrs)
+              print_section(0, "Session ID " + str(_id), section_attrs)
 
         # For summary output
         if (args.summary) :
+            summary.sort(key=lambda x: x[0])
             print_summary(['Session ID', 'Direction', 'Rate', 'Port'],
                      summary,
                      [None, None, None, None, None]

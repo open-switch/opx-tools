@@ -60,7 +60,7 @@ def _show_1q_mac(args, parser):
                         "True" if _static else "False"
                          ]]
 
-       print_summary(['MAC Addr', 'VLAN', 'IF-INDEX', 'IF-NAME', 'Actions', 'Static'],
+       print_summary(['MAC Addr', 'VLAN', 'IF-Index', 'Port', 'Actions', 'Static'],
                      summary,
                      [None, None, None, None, None, None, None]
                     )
