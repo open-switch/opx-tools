@@ -294,12 +294,26 @@ def print_summary_line(r, fs):
             else:
                 li = s.split(' ')
                 s = ''
-                while True:
+                while len(li) > 0:
                     ss = cjoin(s, ' ', li[0])
                     if len(ss) > n:
                         break
                     s = ss
                     li.pop(0)
+                if s == '':
+                    li2 = li[0].split('-')
+                    while len(li2) > 0:
+                        ss = s + li2[0]
+                        if len(li2) > 1:
+                            ss += '-'
+                        if len(ss) > n:
+                            break
+                        s = ss
+                        li2.pop(0)
+                    if len(li2) > 0:
+                        li[0] = '-'.join(li2)
+                    else:
+                        li.pop(0)
                 r[i] = ' '.join(li)
             sys.stdout.write(('{:' + str(n) + '}').format(s))
             i += 1
