@@ -31,7 +31,6 @@ vlan_type_map         = {'data':1, 'mgmt':2}
 intf_type             = 'ianaift:l2vlan'
 
 attr_name             = 'if/interfaces/interface/name'
-attr_desc             = 'if/interfaces/interface/description'
 attr_intf_type        = 'if/interfaces/interface/type'
 attr_vlan_id          = 'base-if-vlan/if/interfaces/interface/id'
 attr_mac              = 'dell-if/if/interfaces/interface/phys-address'
@@ -64,7 +63,6 @@ class cli(object):
                                 choices=['data','mgmt'], default='data', type=str)
         self.parser.add_argument('--ports', dest='ports', help='Untagged port-list', action='store', type=str)
         self.parser.add_argument('--taggedports', dest='tports', help='Tagged port-list', action='store', type=str)
-        self.parser.add_argument('--desc', dest='desc', help='description', action='store', type=str)
 
 
     def create(self):
@@ -90,10 +88,6 @@ class cli(object):
         # Assign untagged ports
         if len(self.tagged_port_list) != 0:
             args_dict[attr_tagged_ports] = self.tagged_port_list
-
-        # Assign description
-        if self.args.desc is not None:
-            args_dict[attr_desc] = self.args.desc
 
         # Invoke cps callback
         self.cps_cb('create', args_dict)	

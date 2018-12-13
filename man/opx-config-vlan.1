@@ -9,7 +9,6 @@ opx-config-vlan \- Configure VLAN
 .OP \-\-type "\fR(\fBdata\fR | \fBmgmt\fR)"
 .OP \-\-ports port-list
 .OP \-\-taggedports port-list
-.OP \-\-desc description
 .B <commands>
 .YS
 .SH DESCRIPTION
@@ -61,9 +60,6 @@ e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
 e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
 .sp 1
 If the port list is not specified, all Ethernet front-panel ports are configured.
-.TP
-\-\-desc \ DESCRIPTION
-A verbose string to describe the VLAN configured. Eg. "management VLAN for switch101".
 .SH COMMANDS
 One of the below mandatory commands needs to be provided.
 .TP 
