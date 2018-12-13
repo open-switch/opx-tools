@@ -24,21 +24,21 @@ import argparse
 from opx_tools.opx_config_utils import *
 
 def vrf_view_routes(vrf):
-    print "\n--> VRF:",vrf
+    print "\nVRF:",vrf
     result=[]
     l=[]
     obj=cps_object.CPSObject('base-route/obj/entry', data={'base-route/obj/vrf-name':vrf})
     cps.get([obj.get()],l)
-    for entry in l:
-        dst_address=get_ip_addr_str(str(entry['data']['base-route/obj/entry/route-prefix']))
+    for i in l:
+        dst_address=get_ip_addr_str(str(i['data']['base-route/obj/entry/route-prefix']))
         try:
-            nh_addr=get_ip_addr_str(str(entry['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/nh-addr']))
+                nh_addr=get_ip_addr_str(str(i['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/nh-addr']))
         except:
-            nh_addr="None"
+                nh_addr="None"
         try:
-            iface=str(entry['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/ifname'])
+                iface=str(i['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/ifname'])
         except:
-            iface="None"
+                iface="None"
         result += [[dst_address,nh_addr,iface]]
     return result
 
@@ -47,8 +47,8 @@ def get_vrf_names():
     l=[]
     vrf_list=[]
     cps.get([obj.get()],l)
-    for entry in l:
-        vrf=entry['data']['ni/network-instances/network-instance/name']
+    for i in l:
+        vrf=i['data']['ni/network-instances/network-instance/name']
         vrf_list.append(vrf)
     return vrf_list
 
@@ -61,16 +61,19 @@ def get_ip_addr_str(data):
 def get_all_routes():
     vrf_list=get_vrf_names()
     for vrf in vrf_list:
-            result=vrf_view_routes(vrf)
-            print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
+        result=vrf_view_routes(vrf)
+        print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
+
+def get_vrf_routes(vrf):
+    result= vrf_view_routes(args.vrf_name)	
+    print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='configure static route')
-    parser.add_argument("--all", action="store_true", help="view all routes", default=False)
-    parser.add_argument("--vrf", help="view specific vrf routes", default='')
+    parser = argparse.ArgumentParser(description='Display static routes', epilog="Example: opx-show-route --vrf default")
+    parser.add_argument("--vrf_name", help="view specific VRF routes")
     args = parser.parse_args()
-    if args.all or args.vrf == '':	
+    if args.vrf_name == None:	
         get_all_routes()
-    if args.vrf:
-        vrf_view_routes(args.vrf)	
+    if args.vrf_name:
+        get_vrf_routes(args.vrf_name)
 
