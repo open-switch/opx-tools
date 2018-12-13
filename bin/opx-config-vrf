@@ -82,8 +82,6 @@ def nas_vrf_op(op, data_dict):
                 commit_changes = commit(op, obj)
                 if commit_changes == False:
                     break
-        elif op == 'get':
-            nas_common.get_cb_method(op)(obj)
         else:
             commit_changes = commit(op,obj)
 
