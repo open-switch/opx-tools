@@ -1,0 +1,54 @@
+.TH opx-config-log "1" "2018-12-12" OPX "OPX utilities"
+.SH NAME
+opx-config-log \- Configure logging and logging levels for different modules
+.SH SYNOPSIS
+.SY opx-configure-log
+.OP \-h
+.OP \-\-help
+.OP enable
+.OP disable
+.OP \-\-module MODULE
+.OP \-\-level LogLevel
+.OP \-\-d 
+.YS
+.SH DESCRIPTION
+This command enables and disables the logging for different modules
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+enable 
+Enable the logging for a module.
+.TP
+disable
+Disable the logging for a module.
+.TP
+\-\-module MODULE
+Enable/Disable logging for a module.
+List of modules are {INTERFACE,ROUTE,NBR_MGR,L2MAC,NAS_L2,SYSTEM,NAS_OS,NETLICAST_SNOOP,QOS,NDI,CPS-EVT,DSAPI,CPS,PAS,NAS_COM,BOARD,ACL}.
+.TP
+\-\-level LogLevel
+Enable/Disable logging for a module with the log level.
+Log levels are {info,notice,warning,critical,error,debug,emerg,alert}.
+All the levels are enabled if the level argument is not specified.
+.TP
+\-\-d
+Shows the logging modules enabled/disabled and the log level information
+.SH EXAMPLE
+.nf
+.eo
+ opx-config-log enable --module INTERFACE --level info
+ opx-config-log enable --module ROUTE --level debug
+ opx-config-log disable --module INTERFACE --level debug
+ opx-config-log disable --module ROUTE --level debug
+ opx-config-log enable --module PAS
+ opx-config-log disable --module PAS
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-log(1)

@@ -1,0 +1,225 @@
+#!/usr/bin/python
+
+import sys
+import subprocess
+import os
+import signal
+import argparse
+import traceback
+import argparse
+from subprocess import check_output
+
+
+_map_level_to_int={
+    'debug':'7',
+    'info':'6',
+    'notice':'5',
+    'warning':'4',
+    'error':'3',
+    'critical':'2',
+    'alert':'1',
+     'emerg':'0'
+    }
+
+moduleList=['INTERFACE', 'ROUTE', 'NBR_MGR', 'L2MAC', 'NAS_L2', 'SYSTEM', 'NAS_OS', 'NETLINK', 'NETLINK_MCAST_SNOOP', 'QOS', 'NDI', 'CPS-EVT', 'DSAPI', 'CPS', 'PAS', 'NAS_COM', 'BOARD', 'ACL']
+
+
+def get_pid(name):
+    return int(check_output(["pidof","-s",name]))
+
+
+
+def __log_enable_to_string(level):
+    if int(level) == 0:
+        return 'Disable'
+    return 'Enable'
+
+parser = argparse.ArgumentParser(description='This tool will update the logging configuration file and enable/disable the logs',formatter_class=argparse.RawDescriptionHelpFormatter, epilog = '''EXAMPLE: 
+                                       opx-config-log enable --module INTERFACE --level info
+                                       opx-config-log enable --module ROUTE --level debug
+                                       opx-config-log disable --module INTERFACE --level info
+                                       opx-config-log disable --module ROUTE --level debug
+                                       opx-config-log enable --module PAS
+                                       opx-config-log disable --module PAS''')
+
+parser.add_argument('operation',choices=['enable','disable'],help='This contains the operation (enable,disable) the module',action='store')
+parser.add_argument('--module',help='This is the module to enable/disable logging',action='store',choices=moduleList)
+parser.add_argument('--level',help='This is the module level to change for a module',action='store',choices=_map_level_to_int.keys())
+parser.add_argument('--d',help='Enable debug printing',action='store_true',required=False)
+
+_args = vars(parser.parse_args())
+
+__maps = {'ALL':'1'}
+
+def __write_log_config():
+    with open(_args['file'],'w+') as f:
+        for _mod in __maps:
+            if _mod == 'ALL':
+                if _args['d']:
+                    print ("ALL %s" % (__maps[_mod]))
+                f.write("ALL %s\n" % (__maps[_mod]))
+                continue
+            for _lvl in __maps[_mod]:
+                f.write("%s %s %s\n" % (_mod,_lvl,__maps[_mod][_lvl]))
+                if _args['d']:
+                    print ("%s %s %s" % ((_mod,_lvl,__maps[_mod][_lvl])))
+
+def _parse_existing_file(name):
+    try:
+        with open(name,'r') as f:
+            while True:
+                _entry_whole = f.readline()
+                if len(_entry_whole)==0: break
+                if _entry_whole[len(_entry_whole)-1]=='\n':
+                    _entry_whole = _entry_whole[:-1]
+                _entry = _entry_whole.split(' ')
+
+                #handle ALL (1/0)
+                if len(_entry)==2:
+                    if __log_enable_to_string(_entry[1])=='Disable':
+                        __maps['ALL'] = _entry[1]
+                    continue
+
+                #handle MODULE level (1/0)
+                if len(_entry)!=3:
+                    print ("%s is an invalid line" %_entry_whole)
+                    continue
+                if not _entry[0] in __maps:
+                    __maps[_entry[0]] = {}
+                __maps[_entry[0]][_entry[1]] = _entry[2]
+    except:
+        if _args['d']:
+            print('No file found at %s' % _args['file'])
+            traceback.print_exc(file=sys.stdout)
+        pass
+    if _args['d']:
+            print __maps
+def __log_level_to_string(level):
+    for i in _map_level_to_int:
+        if _map_level_to_int[i]==level:
+            return i
+    #default
+    for i in _map_level_to_int:
+        return i
+
+def __print_log_config():
+    print('All logs levels - except info and debug - are enabled for all applications')
+    
+    print ('The following overrides the default configuration')
+    
+    for i in __maps:
+        if i == 'ALL':
+            if __log_enable_to_string(__maps[i])=='Disable':
+                print('All logs are disabled due to override flag')
+            continue
+        
+        if _args['module']!=None and _args['module']!=i and _args['module']!='all':
+            if _args['d']:
+                print ('Skipping %s' % i)
+            continue
+
+        for lvl in __maps[i]:
+            print __maps[i]
+            _setting = 'Disabled'
+            if __maps[i][lvl]!=str(0):
+                _setting = 'Enabled'
+            print ("%s %s %s" % (i,__log_level_to_string(lvl),_setting))
+
+def __valid_args_modlev():
+    _mod = _args['module']
+    _lev = _args['level']
+#    if _lev not in _map_level_to_int.keys():
+#        print "Invalid Level Specified"
+#    if _mod not in moduleList:
+#        print "Invalid module specified"
+    if _mod==None:
+        print('This combination is not supported.  Please entry a log module id')
+        sys.exit(1)
+
+
+def __set_mod_level(mod,level,how):
+    if not mod in __maps:
+        __maps[mod] = {}
+
+    if level=='all':
+        for i in _map_level_to_int.keys():
+            __maps[mod][_map_level_to_int[i]] = how
+    else:
+        __maps[mod][level] = how
+
+
+def __enable_logging():
+    __valid_args_modlev()
+
+    _mod = _args['module']
+    if _mod=='ALL':
+        if _mod in __maps:
+            __maps[_mod] = '1'
+    else:
+        _lev = _args['level']
+        __set_mod_level(_mod,_lev,'1')
+
+    if _args['d']:
+        print __maps
+#    print "Successfully enabled logging for module %s with level %s" %(_mod, next((k for k,v in _map_level_to_int.items() if v == _lev), None))
+    __write_log_config()
+
+def __disable_logging():
+    __valid_args_modlev()
+
+    _mod = _args['module']
+    if _mod=='ALL':
+        __maps[_mod] = '0'
+
+    else:
+        _lev = _args['level']
+        __set_mod_level(_mod,_lev,'0')
+
+    if _args['d']:
+        print __maps
+#    print "Successfully disabled logging for module %s with level %s" %(_mod, next((k for k,v in _map_level_to_int.items() if v == _lev), None))
+    __write_log_config()
+
+_operations={'set':__enable_logging,'enable':__enable_logging,'disable':__disable_logging}
+
+def main():
+    _def_file_path = '/etc/opx/evlog.cfg'
+    global _args
+    if  _args['d']:
+         print _args
+
+#    if 'file' in _args and _args['file']==None:
+    _args['file'] = _def_file_path
+
+    if not _args['operation'] in _operations:
+        if  _args['d']:
+            print('Showing module %s' % _args['operation'])
+        _args['module'] = _args['operation']
+        _args['operation'] = 'show'
+        if  _args['d']:
+            print _args
+
+
+    if 'level' in _args and _args['level']!=None:
+        _args['level'] = _args['level'].lower()
+        if _args['level']==None or _args['level'] not in _map_level_to_int:
+            print('This combination is not supported.  Please enter a valid level')
+            sys.exit(1)
+        _args['level'] = str(_map_level_to_int[_args['level']])
+
+    if 'level' in _args and _args['level']==None:
+        _args['level'] = 'all'
+
+    if 'module' in _args and _args['module']=='all':
+        _args['module'] = _args['module'].upper()
+
+    _parse_existing_file(_args['file'])
+
+    if  _args['operation'] in _operations:
+        _operations[_args['operation']]()
+    pid = get_pid("opx_nas_daemon")
+    pid1 = get_pid("opx_pas_service")
+    os.kill(pid,signal.SIGUSR1)
+    os.kill(pid,signal.SIGUSR1)
+if __name__ == '__main__':
+    main()
