@@ -69,7 +69,8 @@ def get_vrf_routes(vrf):
     print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Display static routes', epilog="Example: opx-show-route --vrf default")
+    parser = argparse.ArgumentParser(description='Display static routes', formatter_class=argparse.RawTextHelpFormatter)
+    parser.epilog="Example:\n(1)opx-show-route --vrf default\n(2)opx-show-route"
     parser.add_argument("--vrf_name", help="view specific VRF routes")
     args = parser.parse_args()
     if args.vrf_name == None:	
