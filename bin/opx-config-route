@@ -103,9 +103,9 @@ if __name__ == "__main__":
             cps_obj.add_attr("nh-count", len(nh_ip_list))
             nas_route_op("create", cps_obj, version)
             if (version == 'ipv6'):
-                    route_prefix += 2**(128-prefix_len)
+                route_prefix += 2**(128-prefix_len)
             else:
-                    route_prefix += 2**(32-prefix_len)
+                route_prefix += 2**(32-prefix_len)
         end = time.time()
         print 'Total time for adding %d routes = %f seconds' % (int (num_of_routes),(end - start))
 
@@ -123,8 +123,8 @@ if __name__ == "__main__":
             cps_obj.add_attr("nh-count", len(nh_ip_list))
             nas_route_op("delete", cps_obj, version)
             if (version == 'ipv6'):
-                    route_prefix += 2**(128-prefix_len)
+                route_prefix += 2**(128-prefix_len)
             else:
-                    route_prefix += 2**(32-prefix_len)
+                route_prefix += 2**(32-prefix_len)
         end = time.time()
         print 'Total time for deleting %d routes = %f seconds' % (int (num_of_routes),(end - start))
