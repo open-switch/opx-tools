@@ -5,7 +5,7 @@ opx-show-route \- Show static route
 .SY opx-config-route
 .OP \-h
 .OP \-\-help
-.OP \-\-vrf VRF name
+.OP \-\-vrf_name VRF name
 .YS
 .SH DESCRIPTION
 This command displays static routes in the existing namespaces(VRF). 
@@ -14,12 +14,12 @@ This command displays static routes in the existing namespaces(VRF).
 \-h, \-\-help
 Print help text.
 .TP
-\-\-vrf \ vrf
+\-\-vrf_name \ vrf
 VRF name
 .SH EXAMPLE
 .nf
 .eo
-$ opx-show-route --vrf blue 
+$ opx-show-route --vrf_name blue 
 $ opx-show-route 
 .ec
 .fi
