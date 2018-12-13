@@ -19,9 +19,6 @@ Print help text.
 .TP
 \-\-name \ vrf
 Display ports and routes present in given VRF name
-.TP
-.RI --all
-Display ports and routes present in all VRFs
 .RI --list
 Display existing VRF names.
 .RI --summary
@@ -30,7 +27,7 @@ Display VRF name and ports present in it.
 .nf
 .eo
 $ opx-show-vrf --name blue 
-$ opx-show-vrf --all
+$ opx-show-vrf 
 $ opx-show-vrf --list
 $ opx-show-vrf --summary
 .ec
