@@ -1,0 +1,61 @@
+.TH opx-config-mac "1" "2018-12-12" OPX "OPX utilities"
+.SH NAME
+opx-config-mac \- Configure FDB entries
+.SH SYNOPSIS
+.SY opx-configure-mac
+.OP \-h
+.OP \-\-help
+.OP \-\-mac MAC
+.OP \-\-port PORT
+.OP \-\-vlan VLAN
+.OP \-\-static
+.OP \-\-kernel_conf
+.OP \-\-kernel_conf_only
+.OP \-\-delete-type "\fR( \fBsingle\fR | \fBall\fR  \fBfilter\fR )"
+.YS
+.SH DESCRIPTION
+This command creates and deletes FDB entries.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-mac 
+Specify the MAC address in : format (e.g. 00:11:22:33:44:55).
+.TP
+\-\-port 
+Specify front panel Ethernet interface.
+.TP
+\-\-vlan 
+Specify the VLAN id.
+.TP
+\-\-static 
+Specify in case of static entry.
+.TP
+\-\-kernel_conf 
+Specify if the entry should be availble in kernel (with NPU).
+.TP
+\-\-kernel_conf_only 
+Specify if the entry should be availble in kernel only (not in NPU).
+.TP
+\-\-delete-type ( single | all | filter )
+ single - Specify MAC address and VLAN id
+ all    - Delete all dynamic FDB entries
+ filter - Delete dynamic entries based on attributes passed (port, port-vlan, vlan)
+.SH EXIT STATUS
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-mac create --mac 00:00:12:34:56:90 --vlan 800 --port e101-021-0 --static
+$ opx-config-mac delete --mac 00:00:12:34:56:90 --vlan 800 --delete-type single
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-mac(1)

@@ -1,0 +1,68 @@
+.TH opx-show-mirror "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-show-mirror \- Display Mirroring configuration and status
+.SH SYNOPSIS
+.SY opx-show-mirror
+.OP \-h
+.OP \-\-help
+.OP \-\-id ID
+.OP \-\-type "\fR( \fBspan\fR | \fBrspan\fR )"
+.YS
+.SH DESCRIPTION
+This command prints the current configuration and status of Mirroring sessions
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-id
+Session identifier
+.TP
+\-\-port
+Specify front panel Ethernet interface
+.TP
+\-\-type
+Specify the Mirroring session type (i.e. span/rspan)
+.SH OUTPUT
+.TP
+Id
+Displays the Mirroring session ID.
+.TP
+Direction 
+Displays the direction (ingress/egress/ingress_egress) on which the mirroring session is configured
+.TP
+Src Intf 
+Displays the port name of the source interface
+.TP
+Dest Intf
+Displays the port name of the destination interface
+.TP
+VLAN
+Displays the RSPAN VLAN id
+.SH EXIT STATUS
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
+.SH EXAMPLE
+.nf
+.eo
+$opx-show-mirror --summary
+Session ID | Dest Interface | Type  | VLAN
+------------------------------------------
+2          | e101-004-0     | rspan | 600
+1          | e101-002-0     | span  | 600
+
+$opx-show-mirror --id 2
+Session ID=2
+        Destination Interface: e101-004-0
+        Type:                  rspan
+        VLAN:                  600
+
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-mirror(1)

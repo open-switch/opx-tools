@@ -9,6 +9,6 @@ Vcs-Browser: https://github.com/open-switch/opx-tools
 Vcs-Git: https://github.com/open-switch/opx-tools.git
 
 Package: opx-tools
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-apt
-Description: Openswitch tools which will be used in OPX Package Management
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-apt, python-opx-cps (>= 3.6.2), libopx-base-model1 (>= 3.109.0)
+Description: Openswitch tools for OPX Package Management, Config and Show utilities

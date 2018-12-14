@@ -1,0 +1,45 @@
+.TH opx-config-beacon "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-config-beacon \- Turn chassis or interface beacon LED on or off
+.SH SYNOPSIS
+.SY opx-config-beacon
+.OP "\fB\-h\fR | \fB\-\-help\fR"
+.OP \-\-port port-list
+.RB { on \ | \ off }
+.YS
+.SH DESCRIPTION
+This command turns on or off the beacon LED on the chassis front panel or the given port(s).
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+.RI --port \ port-list
+Specify front panel Ethernet interface(s) to configure.  A
+.I port-list
+is a comma-separated list of 1 one more ranges.  Each range is either a single interface, or a pair of interfaces of the form \fIfrom\fR..\fIto\fR, which specifies all interfaces from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+e101-001-0 \- Expands to e101-001-0
+.sp 1
+e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
+.sp 1
+e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
+.sp 1
+If the port list is not specified, the chassis beacon LED is set.
+.SH EXIT STATUS
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+If the command fails to set the beacon LED, the exit status shall be 1.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-beacon on
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.

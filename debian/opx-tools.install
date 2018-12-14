@@ -1,2 +1,3 @@
 usr/bin/*
-usr/lib/x86_64-linux-gnu/opx/*.py
+usr/lib/python2.7/dist-packages/opx_tools/*
+usr/share/man/man1/*

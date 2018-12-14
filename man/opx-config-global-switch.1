@@ -1,0 +1,90 @@
+.TH opx-config-global-switch "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-config-global-switch \- Configure switch
+.SH SYNOPSIS
+.SY opx-config-global-switch
+.OP \-h
+.OP \-\-help
+.OP \-\-switch-mode "\fR( \fBstore-and-forward\fR | \fBcut-through\fR )"
+.OP \-\-lag-hash-alg "\fR( \fBcrc\fR | \fBrandom\fR | \fBxor\fR )"
+.OP \-\-lag-hash-seed seed
+.OP \-\-lag-hash-fields fields
+.OP \-\-ecmp-hash-alg "\fR( \fBcrc\fR | \fBrandom\fR | \fBxor\fR )"
+.OP \-\-ecmp-hash-seed seed
+.OP \-\-ecmp-hash-fields fields
+.OP \-\-mac-age-time time
+.OP \-\-default-vlan-id vid
+.OP \-\-disable-default-vlan "\fR( \fBon\fR | \fBoff\fR )"
+.OP \-\-default-mac-addr macaddr
+.OP \-\-counter-refresh time
+.OP \-\-uft-mode "\fR( \fBdefault\fR | \fBscaled-L2\fR | \fBscaled-L3-hosts\fR | \fBscaled-L3-routes\fR )"
+.OP \-\-next-profile profile
+.YS
+.SH DESCRIPTION
+This command sets various attributes of a front-panel Ethernet interface.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-switch-mode ( store-and-forward | cut-through )
+Set switch forwarding mode.
+.TP
+\-\-lag-hash-alg ( crc | random | xor )
+Set LAG hash algorithm.
+.TP
+\-\-lag-hash-seed \fIseed\fR
+Set LAG hash algorithm seed value.  Must be a decimal integer in the range ?
+.TP
+\-\-lag-hash-fields \fIfields\fR
+Set frame fields used for LAG hash; comma-separated list of one or more of: dest-ip, dest-mac, l4-dest-port, l4-src-port, src-mac, vlan-id, ethertype, ip-protocol, in-port, src-ip.
+.TP
+\-\-ecmp-hash-alg ( crc | random | xor )
+Set ECMP hash algorithm.
+.TP
+\-\-ecmp-hash-seed \fIseed\fR
+Set ECMP hash algorithm seed value.  Must be a decimal integer in the range ?
+.TP
+\-\-ecmp-hash-fields \fIfields\fR
+Set frame fields used for ECMP hash; comma-separated list of one or more of: dest-ip, dest-mac, l4-dest-port, l4-src-port, src-mac, vlan-id, ethertype, ip-protocol, in-port, src-ip.
+.TP
+\-\-mac-age-time \fItime\fR
+Set ageing timeout for MAC addresses, in seconds.  Must be a decimal integer in the range ?.
+.TP
+\-\-default-vlan-id \fIvid\fR
+Set VLAN id assigned to inbound frames which are not tagged.  Must be a decimal integer in the range 1..4095.
+.TP
+\-\-disable-default-vlan ( on | off )
+???
+.TP
+\-\-default-mac-addr \fImacaddr\fR
+Set default MAC address.  Must be a set of 6 colon-separated hex octets.
+.TP
+\-\-counter-refresh \fItime\fR
+Set time interval for refreshing statistics counters, in seconds.  Must be a decimal integer in the range ?.
+.TP
+\-\-uft-mode ( default | scaled-L2 | scaled-L3-hosts | scaled-L3-routes )
+Set unified forwarding table mode.
+.TP
+\-\-next-profile \fIprofile\fR
+Switch profile used at next boot.  Must be a supported profile.
+.P
+Note that not all options are available on all platforms.
+.SH EXIT STATUS
+If an invalid port list is specified, the exit status shall be 1.
+.br
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-global-switch --switch-mode store-and-forward --mac-age-time 300 --default-vlan-id 1
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-global-switch(1)

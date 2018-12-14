@@ -1,0 +1,259 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+import sys
+from argparse import RawDescriptionHelpFormatter
+import cps
+import cps_utils
+import cps_object
+
+from opx_tools.opx_config_utils import *
+
+admin_status_map        = {1:'up', 2:'down'}
+oper_status_map         = {1:'up', 2:'down', 3:'testing',4:'unknown',5:'dormant',6:'not-present',7:'lower-layer-down'}
+lag_learn_mode_map      = {1:'drop', 2:'disable',3:'hardware', 4:'cpu_trap', 5:'cpu_log'}
+intf_type               = 'ianaift:ieee8023adLag'
+
+attr_intf_obj           = 'dell-base-if-cmn/if/interfaces/interface'
+attr_intf_name          = 'if/interfaces/interface/name'
+attr_intf_type          = 'if/interfaces/interface/type'
+attr_intf_mac           = 'dell-if/if/interfaces/interface/phys-address'
+attr_intf_if_index      = 'dell-base-if-cmn/if/interfaces/interface/if-index'
+attr_intf_mtu           = 'dell-if/if/interfaces/interface/mtu'
+attr_intf_member_ports  = 'dell-if/if/interfaces/interface/member-ports'
+
+attr_intf_state_obj     = 'dell-base-if-cmn/if/interfaces-state/interface'
+attr_intf_state_type    = 'if/interfaces-state/interface/type'
+attr_intf_state_name    = 'if/interfaces-state/interface/name'
+attr_intf_state_admin   = 'if/interfaces-state/interface/admin-status'
+attr_intf_state_oper    = 'if/interfaces-state/interface/oper-status'
+
+attr_lag_num_ports      = 'base-if-lag/if/interfaces-state/interface/num-ports'
+attr_lag_id             = 'base-if-lag/if/interfaces/interface/id'
+attr_lag_opaque_data    = 'base-if-lag/if/interfaces/interface/lag-opaque-data'
+attr_lag_port_state     = 'base-if-lag/if/interfaces/interface/lag-port-state'
+attr_lag_blocked_ports  = 'base-if-lag/if/interfaces/interface/block-port-list'
+attr_lag_unblocked_ports= 'base-if-lag/if/interfaces/interface/unblock-port-list'
+attr_lag_learn_mode     = 'base-if-lag/if/interfaces/interface/learn-mode'
+
+
+help_str='''This command displays one of the following:
+    - Configuration of the LAG with the given ID or NAME or IFINDEX.
+    - A brief list of information of all the VLANs(when SUMMARY option is used).
+    - An exhaustive list of information of all the LAGs(when no other option is used).
+
+''' 
+
+class cli(object):
+
+    seen_list = []
+
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(prog='opx-show-lag',
+                                      formatter_class=RawDescriptionHelpFormatter, 
+                                      description=help_str)
+        option=self.parser.add_mutually_exclusive_group()
+        option.add_argument('--id', action='store', help='LAG ID', type=int)
+        option.add_argument('--name', action='store', help='Name of the LAG', type=str)
+        option.add_argument('--ifindex', action='store', help='Interface Index of the LAG', type=int)
+        option.add_argument('--summary', action='store_true', help='Brief information of all the LAGs')
+
+
+    def get_members(self, obj):
+        try:
+            port_dict = obj[attr_intf_member_ports]
+            if not port_dict:
+                return "None"
+
+            port_list = []
+            for item in port_dict:
+                port_name  = port_dict[item]['dell-if/if/interfaces/interface/member-ports/name'].decode()
+                port_list.append(port_name)
+
+            return port_list
+        except :
+            return "None"
+
+
+    def get_lag_state_obj(self, name):
+        obj = cps_get('observed',
+                       attr_intf_state_obj,
+                       {attr_intf_state_name:name, attr_intf_state_type:intf_type}
+                      )
+        return obj[0]
+
+
+    def print_lag(self, cfg_obj):
+        name=cps_key_attr_data_get(cfg_obj, attr_intf_name)
+
+        state_obj = self.get_lag_state_obj(name)
+
+        attrs = [Struct(heading='LAG ID', 
+                        value=cps_attr_data_get(cfg_obj, attr_lag_id)
+                        ),
+                 Struct(heading='Name',
+                        value=name
+                        ),
+                 Struct(heading='Interface index',
+                        value=cps_key_attr_data_get(cfg_obj, attr_intf_if_index)
+                        ),
+                 Struct(heading='Physical address',
+                        value=cps_attr_data_get(cfg_obj, attr_intf_mac)
+                        ),
+                 Struct(heading='Number of ports',
+                        value=cps_attr_data_get(state_obj, attr_lag_num_ports)
+                        ),
+                 Struct(heading='Member ports',
+                        value=self.get_members(cfg_obj['data'])
+                        ),
+                 Struct(heading='Blocked ports',
+                        value=cps_attr_data_get(cfg_obj, attr_lag_blocked_ports)
+                        ),
+                 Struct(heading='Un-blocked ports',
+                        value=cps_attr_data_get(cfg_obj, attr_lag_unblocked_ports)
+                        ),
+                 Struct(heading='LAG port state',
+                        value=cps_attr_data_get(cfg_obj, attr_lag_port_state)
+                        ),
+                 Struct(heading='Learning mode',
+                        value=cps_attr_data_get(state_obj, attr_lag_learn_mode),
+                        outmap=lag_learn_mode_map
+                        ),
+                 Struct(heading='MTU',
+                        value=cps_attr_data_get(cfg_obj, attr_intf_mtu)
+                        ),
+                 Struct(heading='Admin state',
+                        value=cps_attr_data_get(state_obj, attr_intf_state_admin),
+                        outmap=admin_status_map
+                        ),
+                 Struct(heading='Oper state',
+                        value=cps_attr_data_get(state_obj, attr_intf_state_oper),
+                        outmap=oper_status_map
+                        )
+                 ]
+        if name not in self.seen_list:
+            self.seen_list.append(name)
+            print_section(0, name, attrs)
+
+
+
+    def get_lag_cfg_obj(self, filter_type, value=''):
+        if filter_type == 'all':
+            query = {attr_intf_type:intf_type}
+
+        elif filter_type == 'ifindex':
+            query = {attr_intf_if_index:value}
+
+        elif filter_type == 'name':
+            query = {attr_intf_name:value, attr_intf_type:intf_type}
+
+        cfg_obj = cps_get('target',
+                          attr_intf_obj,
+                          query
+                         )
+
+        if cfg_obj is None or len(cfg_obj) == 0:
+            self.helper_exit('No LAG information found')
+
+        return cfg_obj 
+
+
+
+    def show_lags(self, name):
+        if name == 'all':
+            cfg_obj_list = self.get_lag_cfg_obj('all')
+            for obj in cfg_obj_list:
+                self.print_lag(obj)
+        else:
+            cfg_obj = self.get_lag_cfg_obj('name', name)
+            self.print_lag(cfg_obj[0])
+
+
+
+    def show_lag_by_ifindex(self, index):
+        cfg_obj = self.get_lag_cfg_obj('ifindex', index)
+        itype = cfg_obj[0]['data'][attr_intf_type].decode('utf-8')
+        if intf_type in itype:
+            self.print_lag(cfg_obj[0])
+        else:
+            self.helper_exit('Not a LAG interface')
+
+
+
+    def show_lag_by_id(self, id):
+        found = False
+        cfg_obj_list = self.get_lag_cfg_obj('all')
+        for obj in cfg_obj_list:
+            if id == cps_attr_data_get(obj, attr_lag_id):
+                found = True 
+                self.print_lag(obj)
+                break
+
+        if not found:
+            self.helper_exit('No LAG information found')
+
+
+
+    def show_lags_summary(self):
+        cfg_obj_list = self.get_lag_cfg_obj('all')
+
+        summary = []
+        for cfg_obj in cfg_obj_list:
+            name = cps_key_attr_data_get(cfg_obj, attr_intf_name)
+            state_obj = self.get_lag_state_obj(name)
+
+            if name not in self.seen_list:
+                self.seen_list.append(name)
+
+                summary.append([cps_key_attr_data_get(cfg_obj, attr_intf_if_index),
+                               name,
+                               self.get_members(cfg_obj['data']),
+                               cps_attr_data_get(state_obj, attr_intf_state_admin),
+                               cps_attr_data_get(state_obj, attr_intf_state_oper)
+                               ]
+                              )
+        summary.sort(key=lambda x: x[0])
+        print_summary(['Ifindex', 'Name', 'Member ports', 'Admin state', 'Oper state'],
+                      summary,
+                      [None, None, None, admin_status_map, oper_status_map]
+                     )
+
+    def helper_exit(self, Error):
+        print "opx-show-lag: %s" % Error
+        exit(1)
+
+if __name__ == '__main__':
+    obj = cli()
+
+    # Parsing the command
+    obj.args = obj.parser.parse_args()
+
+    if obj.args.id is not None:
+        obj.show_lag_by_id(obj.args.id)
+
+    elif obj.args.name is not None:
+        obj.show_lags(obj.args.name)
+
+    elif obj.args.summary:
+        obj.show_lags_summary()
+
+    elif obj.args.ifindex is not None:
+        obj.show_lag_by_ifindex(obj.args.ifindex)
+
+    else:
+        obj.show_lags('all')
+

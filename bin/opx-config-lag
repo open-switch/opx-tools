@@ -1,0 +1,416 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+import sys
+from argparse import RawDescriptionHelpFormatter
+import cps
+import cps_utils
+import cps_object
+
+from opx_tools.opx_config_utils import *
+
+enable_status_map       = {1:'up', 0:'down'}
+oper_status_map         = {1:'up', 2:'down', 3:'testing',4:'unknown',5:'dormant',6:'not-present',7:'lower-layer-down'}
+lag_learn_mode_map      = {1:'drop', 2:'disable',3:'hardware', 4:'cpu_trap', 5:'cpu_log'}
+lag_learn_mode_reverse_map = {'drop':1,'disable':2,'hw':3,'cpu_trap':4,'cpu_log':5}
+intf_type               = 'ianaift:ieee8023adLag'
+
+attr_intf_obj           = 'dell-base-if-cmn/if/interfaces/interface'
+attr_intf_name          = 'if/interfaces/interface/name'
+attr_intf_type          = 'if/interfaces/interface/type'
+attr_intf_mac           = 'dell-if/if/interfaces/interface/phys-address'
+attr_intf_if_index      = 'dell-base-if-cmn/if/interfaces/interface/if-index'
+attr_intf_mtu           = 'dell-if/if/interfaces/interface/mtu'
+attr_intf_member_ports  = 'dell-if/if/interfaces/interface/member-ports'
+attr_intf_enable_state  = 'if/interfaces/interface/enabled'
+
+attr_intf_state_obj     = 'dell-base-if-cmn/if/interfaces-state/interface'
+attr_intf_state_type    = 'if/interfaces-state/interface/type'
+attr_intf_state_name    = 'if/interfaces-state/interface/name'
+attr_intf_state_oper    = 'if/interfaces-state/interface/oper-status'
+
+attr_lag_num_ports      = 'base-if-lag/if/interfaces-state/interface/num-ports'
+attr_lag_id             = 'base-if-lag/if/interfaces/interface/id'
+attr_lag_opaque_data    = 'base-if-lag/if/interfaces/interface/lag-opaque-data'
+attr_lag_port_state     = 'base-if-lag/if/interfaces/interface/lag-port-state'
+attr_lag_blocked_ports  = 'base-if-lag/if/interfaces/interface/block-port-list'
+attr_lag_unblocked_ports= 'base-if-lag/if/interfaces/interface/unblock-port-list'
+attr_lag_learn_mode     = 'base-if-lag/if/interfaces/interface/learn-mode'
+
+
+intf_rpc_key_id         = 'dell-base-if-cmn/set-interface'
+intf_rpc_op_attr_id     = 'dell-base-if-cmn/set-interface/input/operation'
+intf_rpc_op_type_map    = {'create': 1, 'delete': 2, 'set': 3}
+
+help_str='''This command supports these sub-commands:
+    create  Create a LAG
+    delete  Delete a LAG
+    set     Set certain properties of a LAG
+    add     Add ports to the blocked or unblocked port-list of a LAG
+    remove  Remove ports from the blocked or unblocked port-list of a LAG
+
+''' 
+
+class cli(object):
+
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(prog='opx-config-lag',
+                                              formatter_class=RawDescriptionHelpFormatter,
+                                              description=help_str)
+        # Mandatory arguments
+        self.parser.add_argument('command', choices=['create','delete','set','add','remove'])
+        self.parser.add_argument('--name', help='LAG name', required=True, action='store', type=str)
+
+        # Optional arguments
+        self.parser.add_argument('--mac-learn-mode', dest='learn_mode', help='MAC learning mode. Default: disable',
+                                choices=['drop','disable','hw','cpu_log','cpu_trap'], type=str)
+        self.parser.add_argument('--blockedports', dest='bports', help='Blocked port-list', action='store', type=str)
+        self.parser.add_argument('--unblockedports', dest='ubports', help='Unblocked port-list', action='store', type=str)
+
+        sub_parser = self.parser.add_mutually_exclusive_group()
+        sub_parser.add_argument('--enable', help='Enable the LAG', action='store_true')
+        sub_parser.add_argument('--disable', help='Disable the LAG', action='store_true')
+
+
+    def create(self):
+        args_dict = {}
+        args_dict[attr_intf_name] = self.args.name
+
+        # Check if LAG already exists
+        cfg_obj = cps_get('target', attr_intf_obj, args_dict)
+        if cfg_obj is not None:
+            self.helper_exit('LAG already exists')
+
+        # Assign mac-learn-mode
+        if self.args.learn_mode:
+            args_dict[attr_lag_learn_mode] = lag_learn_mode_reverse_map[self.args.learn_mode]
+
+        # Enable/Disable the LAG
+        args_dict[attr_intf_enable_state] = self.admin_status_flag
+
+        self.cps_cb('create', args_dict)
+
+
+        # Assign member-ports
+        member_ports = []
+        if len(self.unblocked_port_list) != 0:
+            member_ports +=self.unblocked_port_list
+
+        if len(self.blocked_port_list) != 0:
+            member_ports +=self.blocked_port_list
+
+        self.set_member_ports(sorted(member_ports),'set')
+
+
+        # Assign unblocked ports
+        if len(self.unblocked_port_list) != 0:
+            self.cps_cb('set', 
+                        {attr_intf_name:self.args.name, 
+                         attr_lag_unblocked_ports:sorted(self.unblocked_port_list)
+                        }
+                        )
+
+        # Assign blocked ports
+        if len(self.blocked_port_list) != 0:
+            self.cps_cb('set', 
+                        {attr_intf_name:self.args.name, 
+                         attr_lag_blocked_ports:sorted(self.blocked_port_list)
+                        }
+                       )
+
+
+    def delete(self):
+        self.is_lag_present()
+        print "opx-config-lag: Deleting the LAG %s" % self.args.name
+        self.cps_cb('delete', 
+                    {attr_intf_name:self.args.name}
+                   )
+
+
+    def set(self):
+        args_dict = {}
+        args_dict[attr_intf_name] = self.args.name
+        
+        obj = self.is_lag_present()
+
+        if self.args.ubports is None and \
+                self.args.bports is None and \
+                self.args.learn_mode is None and \
+                not self.args.enable and \
+                not self.args.disable:
+            self.helper_exit('Missing set parameter')
+
+        # Fetch the current set of blocked and unblocked ports
+        cur_ubports = cps_attr_data_get(obj, attr_lag_unblocked_ports)
+        cur_bports  = cps_attr_data_get(obj, attr_lag_blocked_ports)
+        cur_members = cur_ubports + cur_bports
+        cur_members = self.helper_del_nul_items(cur_members)
+
+
+        # set mac-learn-mode
+        chg_flag = False
+        if self.args.learn_mode:
+            chg_flag = True
+            args_dict[attr_lag_learn_mode] = lag_learn_mode_reverse_map[self.args.learn_mode]
+
+        # Enable/Disable the LAG
+        if self.args.enable or self.args.disable:
+            chg_flag = True
+            args_dict[attr_intf_enable_state] = self.admin_status_flag
+
+        if chg_flag:
+            self.cps_cb('set', args_dict)
+
+
+        # Assign member-ports
+        final_ubports = []
+        final_bports  = []
+        final_member  = []
+
+        if self.args.ubports is not None:
+            final_ubports = self.unblocked_port_list
+        elif cur_ubports is not None:
+            final_ubports = cur_ubports
+
+        if self.args.bports is not None:
+            final_bports = self.blocked_port_list
+        elif cur_bports is not None:
+            final_bports = cur_bports
+
+        final_members = sorted(final_ubports + final_bports)
+
+
+        # Setting up the final list of member ports
+        final_members = self.helper_del_nul_items(final_members)
+        self.set_member_ports(final_members, 'set')
+
+        if len(final_members) != 0:
+            # Setting up the final list of unblocked ports
+            final_ubports = self.helper_del_nul_items(final_ubports)
+            if len(final_ubports) != 0 and cur_ubports != final_ubports:
+                self.cps_cb('set', 
+                            {attr_intf_name:self.args.name, 
+                            attr_lag_unblocked_ports:sorted(final_ubports)
+                            }
+                           )
+
+
+            # Setting up the final list of unblocked ports
+            final_bports = self.helper_del_nul_items(final_bports)
+            if len(final_bports) != 0 and cur_bports != final_bports:
+                self.cps_cb('set', 
+                            {attr_intf_name:self.args.name, 
+                            attr_lag_blocked_ports:sorted(final_bports)
+                            }
+                           )
+
+        elif len(cur_members) != 0:
+            # In case all the mmeber ports are to be deleted
+            self.set_member_ports(cur_members, 'delete')
+
+
+
+    def add(self):
+        args_dict = {}
+        args_dict[attr_intf_name] = self.args.name
+
+        obj = self.is_lag_present()
+
+        if self.args.ubports is None and \
+                self.args.bports is None: 
+            self.helper_exit('Missing port-list')
+
+        # Fetch the current set of blocked and unblocked ports
+        ubports = cps_attr_data_get(obj, attr_lag_unblocked_ports)
+        bports  = cps_attr_data_get(obj, attr_lag_blocked_ports)
+
+
+        # Assign member-ports
+        member_ports = []
+        if self.args.ubports is not None:
+            member_ports = ubports + self.unblocked_port_list
+        elif ubports is not None:
+            member_ports = ubports
+
+        if self.args.bports is not None:
+            member_ports += bports + self.blocked_port_list
+        elif bports is not None:
+            member_ports +=bports
+
+        member_ports = self.helper_del_nul_items(member_ports)
+
+        if len(member_ports) != 0:
+            self.set_member_ports(sorted(member_ports),'set')
+
+
+        # Assign unblocked ports
+        if self.args.ubports is not None:
+            ubports += self.unblocked_port_list 
+            ubports = self.helper_del_nul_items(ubports)
+            self.cps_cb('set', 
+                        {attr_intf_name:self.args.name, 
+                         attr_lag_unblocked_ports:sorted(ubports)
+                        }
+                        )
+
+        # Assign blocked ports
+        if self.args.bports is not None:
+            bports += self.blocked_port_list 
+            bports = self.helper_del_nul_items(bports)
+            self.cps_cb('set', 
+                        {attr_intf_name:self.args.name, 
+                         attr_lag_blocked_ports:sorted(bports)
+                        }
+                        )
+
+
+
+    def remove(self):
+        args_dict = {}
+        args_dict[attr_intf_name] = self.args.name
+        mem_del_list = []
+
+        obj = self.is_lag_present()
+
+        if self.args.ubports is None and \
+                self.args.bports is None: 
+            self.helper_exit('Missing port-list')
+
+        # Fetch the current set of blocked and unblocked ports
+        cur_ubports = cps_attr_data_get(obj, attr_lag_unblocked_ports)
+        cur_bports  = cps_attr_data_get(obj, attr_lag_blocked_ports)
+
+
+        # Find the blocked members to be deleted
+        for item in self.blocked_port_list:
+            if item in cur_bports:
+                mem_del_list.append(item)
+
+        # Find the unblocked members to be deleted
+        for item in self.unblocked_port_list:
+            if item in cur_ubports:
+                mem_del_list.append(item)
+
+        # Delete the  members 
+        mem_del_list = self.helper_del_nul_items(mem_del_list)
+        if len(mem_del_list) != 0:
+            self.set_member_ports(mem_del_list, 'delete')
+
+
+    def set_member_ports(self, ports, op):
+        args_dict = {}
+        args_dict[attr_intf_type] = intf_type
+        args_dict[attr_intf_name] = self.args.name
+        args_dict[intf_rpc_op_attr_id] = intf_rpc_op_type_map[op]
+        obj = cps_object.CPSObject(intf_rpc_key_id, data=args_dict)
+
+        l = [attr_intf_member_ports, "0", "name"]
+        index=0
+        for i in ports:
+            l[1]=str(index)
+            index +=1
+            obj.add_embed_attr(l,i)
+        rc = self.commit(obj, 'rpc')
+        if not rc:
+            self.helper_exit('Unexpected error')
+
+
+    def commit(self, obj, op):
+        obj_list = []
+        trans_args_dict = {'change':obj.get(), 'operation':'rpc'}
+        obj_list.append(trans_args_dict)
+        rc = cps.transaction(obj_list)
+        return rc
+
+
+    def cps_cb(self, op, args_dict, commit=True):
+        args_dict[attr_intf_type] = intf_type
+        args_dict[intf_rpc_op_attr_id] = intf_rpc_op_type_map[op]
+        obj = cps_object.CPSObject(intf_rpc_key_id, data=args_dict)
+        if commit:
+            rc = self.commit(obj, 'rpc')
+        else:
+            return obj
+
+        if rc:
+            return None
+        else:
+            self.helper_exit('Unexpected error')
+
+
+    def is_lag_present(self):
+        obj = cps_get('target',
+                      attr_intf_obj,
+                      {attr_intf_name:self.args.name, attr_intf_type:intf_type}
+                     )
+
+        if obj is None:
+            self.helper_exit('Given LAG does not exist')
+        else:
+            return obj[0]
+
+
+    def helper_del_nul_items(self, li):
+        final = [item for item in li if item]
+        return final
+
+
+    def helper_convert_port_struct_to_list(self, port_struct):
+        if port_struct == None:
+            self.helper_exit('Invalid port list')
+        else:
+            port_list = []
+            for item in port_struct:
+                port_list.append(item.name)
+            return port_list
+
+    def helper_exit(self, Error):
+        self.parser.print_help()
+        print "opx-config-lag: %s" % Error
+        exit(1)
+
+
+
+if __name__ == '__main__':
+    obj = cli()
+
+    # Parsing the command
+    obj.args = obj.parser.parse_args()
+
+    # Parsing the enable/disable flag
+    obj.admin_status_flag = 0
+    if obj.args.enable is True:
+        obj.admin_status_flag = 1
+    elif obj.args.disable is True:
+        obj.admin_status_flag = 0
+
+    # parsing the ublocked port list
+    if obj.args.ubports is None or obj.args.ubports.lower() == 'none':
+        obj.unblocked_port_list = []
+    else:
+        port_list_struct = port_range_str_to_port_list(obj.args.ubports,['e'])
+        obj.unblocked_port_list = obj.helper_convert_port_struct_to_list(port_list_struct)
+
+    # parsing the blocked port list
+    if obj.args.bports is None or obj.args.bports.lower() == 'none':
+        obj.blocked_port_list = []
+    else:
+        port_list_struct = port_range_str_to_port_list(obj.args.bports,['e'])
+        obj.blocked_port_list = obj.helper_convert_port_struct_to_list(port_list_struct)
+
+
+    getattr(obj, obj.args.command)()

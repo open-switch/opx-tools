@@ -1,0 +1,357 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import argparse
+
+from opx_tools.opx_config_utils import *
+
+
+parser = argparse.ArgumentParser(description='Show switch configuration and status')
+args = parser.parse_args()
+
+
+hash_alg_outmap = {1: 'xor', 2: 'crc', 3: 'random'}
+
+hash_fields_outmap = {1:  'src-ip',
+                      2:  'dest-ip',
+                      3:  'vlan-id',
+                      4:  'ip-protocol',
+                      5:  'ethertype',
+                      6:  'l4-src-port',
+                      7:  'l4-dest-port',
+                      8:  'src-mac',
+                      9:  'dest-mac',
+                      10: 'in-port'
+                      }
+
+def format_mac_addr(a):
+    return '{}:{}:{}:{}:{}:{}'.format(a[0:2], a[2:4], a[4:6], a[6:8], a[8:10], a[10:12])
+
+resp = cps_get('target', 'base-switch/switching-entities/switching-entity', {})
+if resp is None or len(resp) != 1:
+    print  >> sys.stderr, 'Failed to get switch data'
+    sys.exit(1)
+target = resp[0]
+
+cps_obj = cps_object.CPSObject('base-switch/switching-entities/switching-entity',
+                               qual='target'
+                               )
+cps.set_ownership_type(cps_obj.get_key(), 'db')
+cps_obj.set_property('db', True)
+resp = []
+cps.get([cps_obj.get()], resp)
+target_db = None if resp is None or len(resp) != 1 else resp[0]
+
+
+attrs = [Struct(heading='ACL entry max priority',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/acl-entry-max-priority'
+         ),
+         Struct(heading='ACL entry min priority',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/acl-entry-min-priority'
+         ),
+         Struct(heading='ACL table max priority',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/acl-table-max-priority'
+         ),
+         Struct(heading='ACL table min priority',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/acl-table-min-priority'
+         ),
+         Struct(heading='Admin status',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/admin-status'
+         ),
+         Struct(heading='Bridge table size',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/bridge-table-size'
+         ),
+         Struct(heading='BST enable',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/bst-enable',
+                outmap={0: 'off', 1: 'on'}
+         ),
+         Struct(heading='BST tracking mode',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/bst-tracking-mode',
+                outmap={1: 'peak', 2: 'current'}                
+         ),
+         Struct(heading='Counter refresh interval',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/counter-refresh-interval',
+                suffix='s'
+         ),
+         Struct(heading='Current profile',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/switch-profile'
+         ),
+         Struct(heading='Deep buffer mode enable',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/deep-buffer-mode-enable'
+         ),
+         Struct(heading='Default mac address',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/default-mac-address',
+                func=format_mac_addr
+         ),
+         Struct(heading='Default profile',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/default-profile'
+         ),
+         Struct(heading='Default vlan id',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/default-vlan-id'
+         ),
+         Struct(heading='Disable default vlan',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/disable-default-vlan',
+                outmap={0: 'off', 1: 'on'}
+         ),
+         Struct(heading='ECMP group size',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/ecmp-group-size'
+         ),
+         Struct(heading='ECMP hash algorithm',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-algorithm',
+                outmap=hash_alg_outmap
+         ),
+         Struct(heading='ECMP hash fields',
+                cps_obj=target,
+                cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-fields',
+                outmap=hash_fields_outmap
+         ),
+         Struct(heading='ECMP hash seed value',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-seed-value'
+         ),
+         Struct(heading='ECN ect threshold enable',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ecn-ect-threshold-enable'
+         ),
+         Struct(heading='Egress buffer pool num',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/egress-buffer-pool-num'
+         ),
+         Struct(heading='Egress flow table size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/egress-flow-table-size'
+         ),
+         Struct(heading='Ingress buffer pool num',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ingress-buffer-pool-num'
+         ),
+         Struct(heading='Ingress flow table size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ingress-flow-table-size'
+         ),
+         Struct(heading='IPv4 host size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ipv4-host-size'
+         ),
+         Struct(heading='IPv4 route table size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ipv4-route-table-size'
+         ),
+         Struct(heading='IPv6 extended prefix routes',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ipv6-extended-prefix-routes'
+         ),
+         Struct(heading='IPv6 extended prefix routes lpm block size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ipv6-extended-prefix-routes-lpm-block-size'
+         ),
+         Struct(heading='IPv6 host size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ipv6-host-size'
+         ),
+         Struct(heading='IPv6 route table size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/ipv6-route-table-size'
+         ),
+         Struct(heading='L3 nexthop table size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/l3-nexthop-table-size'
+         ),
+         Struct(heading='LAG hash algorithm',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/lag-hash-algorithm',
+                outmap=hash_alg_outmap
+         ),
+         Struct(heading='LAG hash fields',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/lag-hash-fields',
+                outmap=hash_fields_outmap
+         ),
+         Struct(heading='LAG hash seed value',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/lag-hash-seed-value'
+         ),
+         Struct(heading='MAC address aging timer',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/mac-age-timer',
+                suffix='s'
+         ),
+         Struct(heading='Max ECMP entries per group',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/max-ecmp-entry-per-group'
+         ),
+         Struct(heading='Max IPv6 extended prefix routes',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/max-ipv6-extended-prefix-routes'
+         ),
+         Struct(heading='Max MTU',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/max-mtu'
+         ),
+         Struct(heading='Max supported LAGs',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/max-supported-lags'
+         ),
+         Struct(heading='Max VXLAN overlay nexthops',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/max-vxlan-overlay-nexthops'
+         ),
+         Struct(heading='Max VXLAN overlay rifs',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/max-vxlan-overlay-rifs'
+         ),
+         Struct(heading='Next profile',
+                cps_obj=target_db,
+	        cps_attr='base-switch/switching-entities/switching-entity/switch-profile'
+         ),
+         Struct(heading='NPU identifiers',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/npu-identifiers'
+         ),
+         Struct(heading='Number of multicast queues per port',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/num-multicast-queues-per-port'
+         ),
+         Struct(heading='Number of queues cpu port',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/num-queues-cpu-port'
+         ),
+         Struct(heading='Number of queues per port',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/num-queues-per-port'
+         ),
+         Struct(heading='Number of unicast queues per port',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/num-unicast-queues-per-port'
+         ),
+         Struct(heading='Operational status',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/operational-status',
+                outmap={1: "up", 2: "down", 3: "testing", 4: "unknown", 5: "dormant", 6: "not present",
+                        7: "lower-layer down", 8: "fail"
+                }
+         ),
+         Struct(heading='PFC dl cfg params',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/pfc-dl-cfg-params'
+         ),
+         Struct(heading='PFC dld interval range max',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/pfc-dld-interval-range-max'
+         ),
+         Struct(heading='PFC dld interval range min',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/pfc-dld-interval-range-min'
+         ),
+         Struct(heading='PFC dlr action',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/pfc-dlr-action'
+         ),
+         Struct(heading='PFC dlr interval range max',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/pfc-dlr-interval-range-max'
+         ),
+         Struct(heading='PFC dlr interval range min',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/pfc-dlr-interval-range-min'
+         ),
+         Struct(heading='QoS rate adjust',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/qos-rate-adjust'
+         ),
+         Struct(heading='RIF table size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/rif-table-size'
+         ),
+         Struct(heading='Supported profiles',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/supported-profiles'
+         ),
+         Struct(heading='Switch mode',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/switch-mode',
+                outmap={1: 'cut through', 2: 'store and forward'}
+         ),
+         Struct(heading='Temperature',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/temperature',
+                suffix='deg. C'
+         ),
+         Struct(heading='Total buffer size',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/total-buffer-size'
+         ),
+         Struct(heading='UFT mode',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/uft-mode',
+                outmap={1: 'default', 2: 'scaled-L2', 3: 'scaled-L3-routes', 4: 'scaled-L3-hosts'}
+         ),
+         Struct(heading='UFT host table size',
+                cps_obj=target,
+                cps_attr=['base-switch/switching-entities/switching-entity/uft-mode-info', 'host-table-size']
+                ),
+         Struct(heading='UFT L2 mac table size',
+                cps_obj=target,
+                cps_attr=['base-switch/switching-entities/switching-entity/uft-mode-info', 'l2-mac-table-size']
+                ),
+         Struct(heading='UFT L3 route table size',
+                cps_obj=target,
+                cps_attr=['base-switch/switching-entities/switching-entity/uft-mode-info', 'l3-route-table-size']
+                ),
+         Struct(heading='VXLAN riot enable',
+                cps_obj=target,
+	        cps_attr='base-switch/switching-entities/switching-entity/vxlan-riot-enable',
+                outmap={0: 'off', 1: 'on'}
+         )
+]
+
+li = []
+for a in attrs:
+    if a.cps_obj is None:
+        continue
+    if type(a.cps_attr) == list:
+        v = a.cps_obj['data'].get(a.cps_attr[0], None)
+        if v is None:
+            continue
+        k = '/'.join([a.cps_attr[0], a.cps_attr[1]])
+        a.value = cps_utils.cps_attr_types_map.from_data(k, v['0'][k])
+    else:
+        a.value = cps_attr_data_get(a.cps_obj, a.cps_attr)
+    if a.value is None:
+        continue
+    li.append(a)
+print_section(0,
+              'Switch id {}'.format(cps_attr_data_get(target, 'base-switch/switching-entities/switching-entity/switch-id')),
+              li
+              )

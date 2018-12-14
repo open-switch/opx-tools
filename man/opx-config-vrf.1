@@ -1,0 +1,40 @@
+.TH opx-config-vrf "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-config-vrf \- Create or update VRF
+.SH SYNOPSIS
+.SY opx-config-route
+.OP \-h
+.OP \-\-help
+.OP create/delete/add/remove
+.OP \-\-name VRF name
+.OP \-\-ports Port names
+.YS
+.SH DESCRIPTION
+This command creates namespace(VRF) and add or remove ports to it. 
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-name \ vrf
+VRF name
+.TP
+.RI --ports \ port names
+Specify ports to be part of VRF
+.SH EXIT STATUS
+If an invalid port is specified, the exit status shall be 1.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-vrf create --name blue --port e101-001-0,e101-004-0
+$ opx-config-vrf delete --name blue 
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-vrf(1)

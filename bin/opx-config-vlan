@@ -1,0 +1,307 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+import sys
+from argparse import RawDescriptionHelpFormatter
+import cps
+import cps_utils
+import cps_object
+
+from opx_tools.opx_config_utils import *
+
+
+intf_rpc_key_id       = 'dell-base-if-cmn/set-interface'
+intf_rpc_op_attr_id   = 'dell-base-if-cmn/set-interface/input/operation'
+intf_rpc_op_type_map  = {'create': 1, 'delete': 2, 'set': 3}
+vlan_type_map         = {'data':1, 'mgmt':2}
+intf_type             = 'ianaift:l2vlan'
+
+attr_name             = 'if/interfaces/interface/name'
+attr_intf_type        = 'if/interfaces/interface/type'
+attr_vlan_id          = 'base-if-vlan/if/interfaces/interface/id'
+attr_mac              = 'dell-if/if/interfaces/interface/phys-address'
+attr_tagged_ports     = 'dell-if/if/interfaces/interface/tagged-ports'
+attr_untagged_ports   = 'dell-if/if/interfaces/interface/untagged-ports'
+attr_vlan_obj         = 'dell-base-if-cmn/if/interfaces/interface'
+attr_vlan_type        = 'dell-if/if/interfaces/interface/vlan-type'
+
+help_str='''This command supports these sub-commands:
+    create  Create a VLAN
+    delete  Delete a VLAN
+    set     Set the tagged or untagged port-list of a VLAN
+    add     Add ports to the tagged or untagged port-list of a VLAN
+    remove  Remove ports from the tagged or untagged port-list of a VLAN
+
+''' 
+
+class cli(object):
+
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(prog='opx-config-vlan',
+                                              formatter_class=RawDescriptionHelpFormatter,
+                                              description=help_str)
+        # Mandatory arguments
+        self.parser.add_argument('command', choices=['create','delete','set','add','remove'])
+        self.parser.add_argument('--id', dest='id', help='VLAN ID', required=True, action='store', type=int)
+
+        # Optional arguments
+        self.parser.add_argument('--type', dest='type', help='VLAN type (Data or Management). Default: data', 
+                                choices=['data','mgmt'], default='data', type=str)
+        self.parser.add_argument('--ports', dest='ports', help='Untagged port-list', action='store', type=str)
+        self.parser.add_argument('--taggedports', dest='tports', help='Tagged port-list', action='store', type=str)
+
+
+    def create(self):
+        args_dict = {}
+        args_dict[attr_vlan_id] = self.args.id
+        args_dict[attr_intf_type] = intf_type
+
+        # Check if the VLAN exists
+        obj = cps_get('target', attr_vlan_obj, args_dict)
+        if obj is not None:
+            self.helper_exit('VLAN already exists')
+
+        # Assign VLAN type
+        if self.args.type == 'data':
+            args_dict[attr_vlan_type] = vlan_type_map['data']
+        elif self.args.type == 'mgmt':
+            args_dict[attr_vlan_type] = vlan_type_map['mgmt']
+
+        # Assign tagged ports
+        if len(self.untagged_port_list) != 0:
+            args_dict[attr_untagged_ports] = self.untagged_port_list
+
+        # Assign untagged ports
+        if len(self.tagged_port_list) != 0:
+            args_dict[attr_tagged_ports] = self.tagged_port_list
+
+        # Invoke cps callback
+        self.cps_cb('create', args_dict)	
+
+
+    def delete(self):
+        args_dict = {}
+        args_dict[attr_name] = self.name
+
+        vlan_attr_list = []
+        target_port_list = []
+        cur_port_list = []
+
+        # Fetching the existing attributes of the VLAN
+        vlan_obj = cps_object.CPSObject(attr_vlan_obj)
+        vlan_obj.add_attr(attr_name, self.name)
+        cps.get([vlan_obj.get()], vlan_attr_list)
+
+
+        if not vlan_attr_list:
+            self.helper_exit('VLAN does not exist')
+
+        if attr_tagged_ports in vlan_attr_list[0]['data'] or \
+           attr_untagged_ports in vlan_attr_list[0]['data']:
+            self.helper_exit('Existing bridge member ports. Please delete them using remove sub-command.')
+
+        self.cps_cb('delete', args_dict)
+
+
+    def set(self):
+        args_dict = {}
+        args_dict[attr_name] = self.name
+        obj = cps_get('target',
+                      attr_vlan_obj,
+                      {attr_name:self.name, attr_intf_type:intf_type}
+                      )
+
+        if obj == None:
+            self.helper_exit('VLAN does not exist')
+        else:
+            utports = cps_attr_data_get(obj[0], attr_untagged_ports)
+            tports  = cps_attr_data_get(obj[0], attr_tagged_ports)
+
+
+        if self.args.ports is None and self.args.tports is None:
+            self.helper_exit('missing set parameter')
+
+        # Setting the tagged port list
+        if self.args.tports is not None:
+            # Check if any of the given tagged ports are already in the untagged port-list
+            if utports is not None:
+                for port in self.tagged_port_list:
+                    if port in utports:
+                        self.helper_exit('Some of the given ports are part of the untagged port-list. Remove them first')
+
+            args_dict[attr_tagged_ports] = self.tagged_port_list
+
+
+        # Setting the untagged port list
+        if self.args.ports is not None:
+            # Check if any of the given tagged ports are already in the untagged port-list
+            if tports is not None:
+                for port in self.untagged_port_list:
+                    if port in tports:
+                        self.helper_exit('Some of the given ports are part of the tagged port-list. Remove them first')
+
+            args_dict[attr_untagged_ports] = self.untagged_port_list
+
+        self.cps_cb('set', args_dict)
+
+
+    def add(self):
+        args_dict = {}
+        args_dict[attr_name] = self.name
+        vlan_attr_list = []
+
+        # Fetching the existing attributes of the VLAN
+        vlan_obj = cps_object.CPSObject(attr_vlan_obj)
+        vlan_obj.add_attr(attr_name, self.name)
+        cps.get([vlan_obj.get()], vlan_attr_list)
+
+        if not vlan_attr_list:
+            self.helper_exit('VLAN does not exist')
+
+        if self.args.ports is None and self.args.tports is None:
+            self.helper_exit('Missing add parameter')
+
+        # Adding to the tagged port list
+        if len(self.tagged_port_list) != 0:
+            if attr_tagged_ports in vlan_attr_list[0]['data']:
+                self.tagged_port_list += vlan_attr_list[0]['data'][attr_tagged_ports]
+
+            args_dict[attr_tagged_ports] = self.tagged_port_list
+
+
+        # Adding to the untagged port list
+        if len(self.untagged_port_list) != 0:
+            if attr_untagged_ports in vlan_attr_list[0]['data']:
+                self.untagged_port_list += vlan_attr_list[0]['data'][attr_untagged_ports]
+
+            args_dict[attr_untagged_ports] = self.untagged_port_list
+
+
+        self.cps_cb('set', args_dict)
+
+
+    def remove(self):
+        args_dict = {}
+        args_dict[attr_name] = self.name
+
+        vlan_attr_list = []
+        cur_port_list = []
+
+        # Fetching the existing attributes of the VLAN
+        vlan_obj = cps_object.CPSObject(attr_vlan_obj)
+        vlan_obj.add_attr(attr_name, self.name)
+        cps.get([vlan_obj.get()], vlan_attr_list)
+
+        if not vlan_attr_list:
+            self.helper_exit('VLAN does not exist')
+
+        if self.args.ports is None and self.args.tports is None:
+            self.helper_exit('Missing remove parameter')
+
+        # Delete tagged ports
+        target_port_list = []
+        if len(self.tagged_port_list) != 0:
+            if attr_tagged_ports in vlan_attr_list[0]['data']:
+                curr_port_list = vlan_attr_list[0]['data'][attr_tagged_ports]
+
+                for curr in curr_port_list:
+                    # Strip the port name from CPS to have the same name format
+                    port_name = str(curr).rstrip('\0')
+                    if port_name not in self.tagged_port_list:
+                        target_port_list.append(port_name)
+
+                args_dict[attr_tagged_ports] = target_port_list
+            else:
+                self.helper_exit('Tagged port-list already empty')
+
+        # Delete untagged ports
+        target_port_list = []
+        if len(self.untagged_port_list) != 0:
+            if attr_untagged_ports in vlan_attr_list[0]['data']:
+                curr_port_list = vlan_attr_list[0]['data'][attr_untagged_ports]
+
+                for curr in curr_port_list:
+                    # Strip the port name from CPS to have the same name format
+                    port_name = str(curr).rstrip('\0')
+                    if port_name not in self.untagged_port_list:
+                        target_port_list.append(port_name)
+
+                args_dict[attr_untagged_ports] = target_port_list
+            else:
+                self.helper_exit('Untagged port-list already empty')
+
+        self.cps_cb('set', args_dict)
+
+
+    def commit(self, obj, op):
+        obj_list = []
+        trans_args_dict = {'change':obj.get(), 'operation':'rpc'}
+        obj_list.append(trans_args_dict)
+        rc = cps.transaction(obj_list)
+        return rc
+
+
+    def cps_cb(self, op, args_dict):
+        args_dict[intf_rpc_op_attr_id] = intf_rpc_op_type_map[op]
+        obj = cps_object.CPSObject(intf_rpc_key_id, data=args_dict)
+        rc = self.commit(obj, 'rpc')
+        if not rc:
+            self.helper_exit('Unexpected error')
+        #nas_common.get_cb_method('rpc')(obj)
+
+
+    def helper_convert_port_struct_to_list(self, port_struct):
+        if port_struct is None:
+            self.helper_exit('Invalid port list')
+        else:
+            port_list = []
+            for item in port_struct:
+                port_list.append(item.name)
+            return port_list
+
+
+    def helper_exit(self, Error):
+        self.parser.print_help()
+        print "opx-config-vlan: %s" % Error
+        exit(1)
+
+
+if __name__ == '__main__':
+    obj = cli()
+
+    # Parsing the command
+    obj.args = obj.parser.parse_args()
+
+    # Constructing VLAN name
+    obj.name = 'br%s' % obj.args.id
+
+    # parsing the untagged port list
+    if obj.args.ports is None or obj.args.ports.lower() == 'none':
+        obj.untagged_port_list = []
+    else:
+        port_list_struct = port_range_str_to_port_list(obj.args.ports,['e'])
+        obj.untagged_port_list = obj.helper_convert_port_struct_to_list(port_list_struct)
+
+    # parsing the tagged port list
+    if obj.args.tports is None or obj.args.tports.lower() == 'none':
+        obj.tagged_port_list = []
+    else:
+        port_list_struct = port_range_str_to_port_list(obj.args.tports,['e'])
+        obj.tagged_port_list = obj.helper_convert_port_struct_to_list(port_list_struct)
+
+
+    getattr(obj, obj.args.command)()

@@ -1,0 +1,99 @@
+.TH opx-show-vlan "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-show-vlan \- Display VLAN configuration
+.SH SYNOPSIS
+.SY opx-show-vlan
+.OP \-h
+.OP \-\-help
+.OP \-\-id ID
+.OP \-\-name NAME
+.OP \-\-ifindex IFINDEX
+.OP \-\-type TYPE
+.OP \-\-summary
+.YS
+.SH DESCRIPTION
+This command prints the current configuration of a VLAN.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+--id ID
+Print the configuration information of the VLAN having the given ID.
+.TP
+--name NAME
+Print the configuration information of the VLAN having the given name.
+.TP
+--ifindex IFINDEX
+Print the configuration information of the VLAN having the given ifindex.
+.TP
+--type TYPE
+Print the configuration information of the VLAN(s) having the given type (data or management).
+.TP
+--summary
+Print a summary table, with each VLAN on a single line.
+.SH OUTPUT
+.TP
+VLAN ID
+Displays the ID assigned to the VLAN.
+.TP
+Name
+Displays the name assigned to the VLAN.
+.TP
+Interface Index
+Displays the ifindex assigned to the VLAN.
+.TP
+Physical Address
+Displays the Ethernet MAC address assigned to the VLAN.
+.TP
+Tagged Ports
+Displays the list of tagged member ports of the VLAN. 
+A tagged port accepts traffic for all the VLANs. It is also referred as a trunk port.
+.TP
+Untagged Ports
+Displays the list of untagged member ports of the VLAN.
+An untagged port accepts traffic for the associated VLAN only. It is also referred as an access port.
+.TP
+Learning Mode
+Displays the MAC learning mode configured on the VLAN.
+.TP
+MTU
+Displays the current maximum transmission unit (MTU) of the vlan.
+.TP
+Type
+Displays the type(data or management) of the VLAN.
+.SH EXIT STATUS
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+If there is any other error, the exit status shall be 1.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ ./opx-show-vlan --name br105
+br105
+        VLAN ID:          105
+        Name:             br105
+        Interface index:  60
+        Physical address: None
+        Tagged ports:     e101-009-0
+        Untagged ports:   None
+        Type:             data
+        Learning mode:    UNKNOWN
+        MTU:              None
+
+$ ./opx-show-vlan --summary
+ID  | Name  | Type | Tagged ports | Untagged ports
+--------------------------------------------------
+101 | br101 | data | None         | None
+105 | br105 | data | e101-009-0   | None
+
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-vlan(1)

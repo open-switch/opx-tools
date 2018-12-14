@@ -1,0 +1,142 @@
+#!/usr/bin/python
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+from cps_utils import *
+import argparse
+import sys
+
+flush_type_map = {
+                "port": 1,
+                "port-vlan": 2,
+                "vlan": 3,
+                "bridge" : 5,
+                "bridge-endpoint-ip" : 6,
+                "all" : 4,
+                "endpoint-ip" : 7,
+                "port-vlan-subport" : 8,
+                "port-bridge" : 9
+            }
+
+def _exit(level, Error):
+    print "opx-config-mac: %s" % Error
+    sys.exit(level)
+
+def commit(obj, op):
+    l = []
+    obj_tup = (op, obj.get())
+    l.append(obj_tup)
+    t = CPSTransaction(l)
+    ret = t.commit()
+    if not ret:
+        print obj.get()
+        _exit(2, "Commit failed")
+    return ret
+
+def _fill_up_attr(args, obj):
+    
+    if args.static:
+        obj.add_attr("static",args.static)
+    if args.kernel_conf or args.kernel_conf_only:
+        obj.add_attr("configure-os",1)
+    if args.kernel_conf_only:
+        obj.add_attr("configure-npu",0)
+
+def _create_1q_mac(args, parser):
+
+    if not args.mac or not args.vlan or not args.port:
+        parser.print_help()
+        _exit(1, "Please provide all the required (mac/vlan/port) attributes")
+
+    cps_utils.add_attr_type("base-mac/table/mac-address", "mac")
+    obj = CPSObject('base-mac/table',
+                     data= { 
+                             "switch-id" : 0, 
+                             "mac-address" : args.mac,
+                             "vlan" : args.vlan, 
+                             "ifname":args.port  
+                           })
+    _fill_up_attr(args, obj)
+
+    return commit(obj, "create")
+
+def _delete_mac(args,parser):
+
+    if not args.delete_type :
+        parser.print_help()
+        _exit(1, "Required argument is missing : delete_type")
+
+    cps_utils.add_attr_type("base-mac/table/mac-address", "mac")
+
+    if args.delete_type == "single" :
+       if not args.mac or not args.vlan :
+         parser.print_help()
+         _exit(1, "Required arguments are missing : mac/vlan")
+   
+       obj = CPSObject('base-mac/table', 
+                        data= { "mac-address" : args.mac, "vlan" : args.vlan })
+
+       if args.kernel_conf or args.kernel_conf_only :
+           obj.add_attr("configure-os",1)
+        
+       return commit(obj, "delete")
+
+    obj = CPSObject('base-mac/flush')
+    l = ["base-mac/flush/input/filter","0","flush-type"]
+
+    if args.delete_type == "all" :
+       obj.add_embed_attr(l,flush_type_map["all"])
+    
+    else :
+       if args.port and args.vlan :
+          obj.add_embed_attr(l,flush_type_map["port-vlan"])
+          l[2]="ifname"
+          obj.add_embed_attr(l,args.port)
+
+       elif args.port and not args.vlan :
+          obj.add_embed_attr(l,flush_type_map["port"])
+          l[2]="ifname"
+          obj.add_embed_attr(l,args.port)
+
+       elif args.vlan and not args.port :
+          obj.add_embed_attr(l,flush_type_map["vlan"])
+          l[2]="vlan"
+          obj.add_embed_attr(l,args.vlan)
+       else :
+          parser.print_help()
+          _exit(1, "Required arguments are missing : port/vlan")
+
+    return commit(obj, 'rpc')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description = 'Tool for FDB management')
+    parser.add_argument('command', choices = ['create', 'delete'])
+    parser.add_argument('--mac', help=" MAC address")
+    parser.add_argument('--port', help = 'Name of the port')
+    parser.add_argument('--vlan',type = int,  help = 'vlan id')
+    parser.add_argument('--static',action='store_true',  default=False, help = 'Static entry')
+    parser.add_argument('--kernel_conf',action='store_true',  default=False, help = 'Configure the entry into kernel (with NPU)')
+    parser.add_argument('--kernel_conf_only',action='store_true',  default=False, help = 'Configure the entry into kernel only (not in NPU)')
+    parser.add_argument('--delete-type',choices = ["single","all","filter"],
+                        help = 'Delete options')
+
+    args = parser.parse_args()
+
+    if args.command == 'create':
+        _create_1q_mac(args,parser)
+
+    elif args.command == 'delete':
+        _delete_mac(args,parser)
+

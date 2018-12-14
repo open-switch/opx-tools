@@ -1,0 +1,69 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+
+from opx_tools.opx_config_utils import *
+
+
+attrs = [Struct(option='--autoneg',
+                map={'on': 1, 'off': 0},
+                help='Autonegotiation',
+                cps_attr='dell-if/if/interfaces/interface/auto-negotiation'
+                ),
+         Struct(option='--speed',
+                map={'10M': 1, '100M': 2, '1G': 3, '10G': 4, '25G': 5, '40G': 6, '100G': 7,
+                     '20G': 9, '50G': 10, '200G': 11, '400G': 12, '4G-FC': 13, '8G-FC': 14, '16G-FC': 15,
+                     '32G-FC': 16, '2G-FC': 17, '64G-FC': 18, '128G-FC': 19, '4G': 20, '1G-FC': 21
+                     },
+                help='Link speed',
+                cps_attr='dell-if/if/interfaces/interface/speed'
+                ),
+         Struct(option='--duplex',
+                map={'half': 2, 'full': 1},
+                help='Link duplex',
+                cps_attr='dell-if/if/interfaces/interface/duplex'
+                ),
+         Struct(option='--fec',
+                map={'auto': 1, 'off': 2, 'cl91-rs': 3, 'cl74-fc': 4, 'cl108-rs': 5},
+                help='FEC',
+                cps_attr='dell-if/if/interfaces/interface/fec'
+                )
+         ]
+
+parser = argparse.ArgumentParser(description='Set interface configuration')
+parser.add_argument('--port', type=str, required=True, help='List of ports')
+for x in attrs:
+    extra = {}
+    if hasattr(x, 'map'):
+        extra['choices'] = x.map.keys()
+    parser.add_argument(x.option, help=x.help, type=getattr(x, 'type', str), **extra)
+args = parser.parse_args()
+
+li = port_range_str_to_port_list(args.port, ['e'])
+
+d = {}
+for x in attrs:
+    a = getattr(args, x.option[2:], None)
+    if a is None:
+        continue
+    d[x.cps_attr] = x.map[a]
+
+for port in li:
+    d['dell-base-if-cmn/if/interfaces/interface/if-index'] = port.idx
+    if not cps_set('dell-base-if-cmn/if/interfaces/interface', 'target', d):
+        print 'Failed to set port {}'.format(port) >> sys.stderr
+    

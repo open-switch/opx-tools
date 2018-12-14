@@ -1,0 +1,39 @@
+.TH opx-show-vrf "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-show-vrf \- Show VRF details
+.SH SYNOPSIS
+.SY opx-show-vrf
+.OP \-h
+.OP \-\-help
+.OP \-\-name VRF name
+.OP \-\-list
+.OP \-\-summary 
+.YS
+.SH DESCRIPTION
+This command displays namespaces(VRF) details. 
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-name \ VRF name
+Display ports and routes present in given VRF name
+.RI --list
+Display existing VRF names.
+.RI --summary
+Display VRF name and ports present in it.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-show-vrf --name blue 
+$ opx-show-vrf 
+$ opx-show-vrf --list
+$ opx-show-vrf --summary
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-vrf(1)

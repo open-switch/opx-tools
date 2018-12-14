@@ -1,0 +1,44 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import sys
+import cps
+import cps_object
+
+import argparse
+
+from opx_tools.opx_config_utils import *
+
+
+parser = argparse.ArgumentParser(description='Set beacon LED')
+parser.add_argument('--port', type=str, help='List of ports; if none, set chassis beacon')
+parser.add_argument('state', choices=['off', 'on'], help='LED state')
+args = parser.parse_args()
+
+args.state = 1 if args.state == 'on' else 0
+
+if args.port is None:
+    if not cps_set('base-pas/led', 'target', {'entity-type': 3, 'slot': 1, 'name': 'Beacon', 'on': args.state}):
+        print >> sys.stderr, 'Failed to set chassis beacon LED'
+        sys.exit(1)
+else:
+    for port in port_range_str_to_port_list(args.port, ['e']):
+        obj = cps_object.CPSObject(qual='target', module='dell-base-if-cmn/set-interface')
+        obj.add_attr('dell-base-if-cmn/set-interface/input/operation', '3')
+        obj.add_attr('if/interfaces/interface/name', port.name)
+        obj.add_attr('base-if-phy/if/interfaces/interface/identification-led', args.state)
+        if not cps.transaction([{'operation': 'rpc', 'change': obj.get()}]):
+            print >> sys.stderr, 'Not supported or error setting interface beacon LED for', port.name

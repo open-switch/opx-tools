@@ -1,0 +1,106 @@
+.TH opx-show-lag "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-show-lag \- Display LAG configuration and status
+.SH SYNOPSIS
+.SY opx-show-lag
+.OP \-h
+.OP \-\-help
+.OP \-\-id ID
+.OP \-\-name NAME
+.OP \-\-ifindex IFINDEX
+.OP \-\-summary
+.YS
+.SH DESCRIPTION
+This command prints the current configuration and status of LAG(s).
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+--id ID
+Print the configuration and status information of the LAG having the given ID.
+.TP
+--name NAME
+Print the configuration and status information of the LAG having the given name.
+.TP
+--ifindex IFINDEX
+Print the configuration and status information of the LAG having the given ifindex.
+.TP
+--summary
+Print a summary table, with each LAG on a single line.
+.SH OUTPUT
+.TP
+LAG ID
+Displays the ID assigned to the LAG.
+.TP
+Name
+Displays the name assigned to the LAG.
+.TP
+Interface Index
+Displays the ifindex assigned to the LAG.
+.TP
+Physical Address
+Displays the Ethernet MAC address assigned to the LAG.
+.TP
+Number of Ports
+Displays the total number of member ports that the LAG contains.
+.TP
+Member Ports
+Displays list of ports part if the LAG.
+.TP
+Blocked Ports
+Displays the list of member ports of the LAG which are blocked (dont carry any traffic).
+.TP
+Unblocked Ports
+Displays the list of member ports of the LAG which are unblocked (carry all traffic).
+.TP
+Learning Mode
+Displays the MAC learning mode configured on the LAG.
+.TP
+MTU
+Displays the current maximum transmission unit (MTU) of the LAG.
+.TP
+Admin State
+Displays if the lag is administratively enabled.
+.TP
+Oper State
+Displays if the lag is operational.
+.SH EXIT STATUS
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+If there is any other error, the exit status shall be 1.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$opx-show-lag --name test2
+test2
+        LAG ID:           2
+        Name:             test2
+        Interface Index:  53
+        Physical Address: ec:f4:bb:fb:f7:55
+        Number of ports:  2
+        Member Ports:     e101-004-0 e101-001-0
+        Blocked Ports:    e101-001-0
+        Un-blocked Ports: e101-004-0
+        Learning Mode:    disable
+        MTU:              1532
+        Admin State:      down
+        Oper State:       up
+        LAG Opaque Data:  01000000000000002c000000000000000100000000000000040000000000000000000000020000000000000008000000000000000200000000000200
+
+$opx-show-lag --summary
+IFINDEX | NAME  | MEMBER PORTS            | ADMIN STATE | OPER STATE
+--------------------------------------------------------------------
+45      | bond0 | None                    | down        | down
+51      | test  | e101-002-0              | down        | up
+53      | test2 | e101-004-0 e101-001-0   | down        | up
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-lag(1)

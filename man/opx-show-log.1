@@ -1,0 +1,32 @@
+.TH opx-show-log "1" "2018-12-12" OPX "OPX utilities"
+.SH NAME
+opx-show-log \- Display the Module name and the logging level enabled
+.SH SYNOPSIS
+.SY opx-show-log
+.OP \-h
+.OP \-\-help
+.OP \-\-module MODULE
+.YS
+.SH DESCRIPTION
+This will show the summary of modules and the log levels enabled
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-module MODULE
+Pass the module name to display the log levels enabled.
+List of modules are {INTERFACE,ROUTE,NBR_MGR,L2MAC,NAS_L2,SYSTEM,NAS_OS,NETLICAST_SNOOP,QOS,NDI,CPS-EVT,DSAPI,CPS,PAS,NAS_COM,BOARD,ACL}.
+.SH EXAMPLE
+.nf
+.eo
+ opx-show-log <enter>
+ opx-show-log --module INTERFACE
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-log(1)

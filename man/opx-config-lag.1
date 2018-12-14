@@ -1,0 +1,110 @@
+.TH opx-config-lag "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-config-lag \- Configure LAG
+.SH SYNOPSIS
+.SY opx-config-lag
+.OP \-h
+.OP \-\-help
+.OP \-\-name NAME
+.OP \-\-mac-learn-mode "\fR( \fBdrop\fR | \fBdisable\fR | \fBhw\fR | \fBcpu_log\fR  | \fBcpu_trap\fR)"
+.OP \-\-blockedports port-list
+.OP \-\-unblockedports port-list
+.B [--enable | --disable]
+.B <commands>
+.YS
+.SH DESCRIPTION
+This command creates and deletes a LAG. It also sets various attributes of a LAG.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-name NAME
+Name of the LAG
+.TP
+\-\-mac-learn-mode (drop | disable | hw | cpu_trap | cpu_log)
+MAC learning mode of the LAG. It takes one of the 5 possible values. By default it is set to 'disable'.
+.IP
+drop     Drop packets with unkown source MAC address. Do not learn, Do not forward.
+.IP
+disable  Do not learn new source MAC address. Forward Based on destination MAC.
+.IP
+hw       Hardware Learning. Learn source MAC address. Forward based on destination.
+.IP
+cpu_trap Trap packets with unknown source MAC address to CPU. Do not learn. Do not forward.
+.IP
+cpu_log  Trap packets with unknown source MAC address to CPU. Do not learn. Forward based on destination MAC.
+ 
+.TP
+.RI --blockedports \ port-list
+Specify a list of front panel Ethernet ports to configure as blocked ports.
+A blocked port is a member port of the LAG that would not allow the traffic to flow through it. 
+.I port-list
+is a comma-separated list of single or a range of interfaces.  Each range is either a single interface, or a pair of interfaces of the form \fIfrom\fR..\fIto\fR, which specifies all interfaces from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+e101-001-0 \- Expands to e101-001-0
+.sp 1
+e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
+.sp 1
+e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
+.sp 1
+If the port list is not specified, all Ethernet front-panel ports are configured.
+.TP
+.RI --unblockedports \ port-list
+Specify a list of front panel Ethernet ports to configure as unblocked ports.
+An unblocked port is a member port of the LAG that would allow the traffic to flow through it. 
+.I port-list
+is a comma-separated list of single or a range of interfaces.  Each range is either a single interface, or a pair of interfaces of the form \fIfrom\fR..\fIto\fR, which specifies all interfaces from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+e101-001-0 \- Expands to e101-001-0
+.sp 1
+e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
+.sp 1
+e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
+.sp 1
+If the port list is not specified, all Ethernet front-panel ports are configured.
+.TP
+\-\-enable | \-\-disable
+Set the admin status (enable or disable) of the LAG.
+.SH COMMANDS
+One of the below mandatory commands needs to be provided.
+.TP 
+.B create
+Create a new LAG
+.TP 
+.B delete
+Delete an existing LAG
+.TP 
+.B set
+Set the ports (blocked and unblocked), admin status and MAC learning mode of a LAG, to the given value(s)
+.TP 
+.B add
+Add some blocked or unblocked port(s) to the port-list of a LAG
+.TP 
+.B remove
+Remove some blocked or unblocked port(s) from the port-list of a LAG
+
+.SH EXIT STATUS
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+If there is any other error, the exit status shall be 1.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-lag create --name lag1 --blockedports e101-002-0 --unblockedports e101-003-0..e101-005-0 
+$ opx-config-lag set --name lag1 --enable
+$ opx-config-lag delete --name lag1  
+.ec
+.fi
+.SH LIMITATIONS
+Adding a port which is already a part of another LAG is not supported.
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-lag(1)

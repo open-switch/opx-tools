@@ -1,0 +1,59 @@
+.TH opx-config-mirror "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-config-mirror \- Configure Mirroring feature
+.SH SYNOPSIS
+.SY opx-configure-mirror
+.OP \-h
+.OP \-\-help
+.OP \-\-src_intf SRC_INTF
+.OP \-\-dest_intf DEST_INTF
+.OP \-\-direction "\fR( \fBingress\fR | \fBegress\fR  \fBingress_egress\fR )"
+.OP \-\-id ID
+.OP \-\-vlan VLAN
+.OP \-\-type "\fR( \fBspan\fR | \fBrspan\fR )"
+.YS
+.SH DESCRIPTION
+This command creates and configures various attributes of a mirroring session.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-src_intf 
+Specify the port name (i.e. front panel Ethernet interface) as the source interface for this mirroring session.
+.TP
+\-\-dest_intf 
+Specify the port name (i.e. front panel Ethernet interface) as the destination interface for this mirroring session.
+.TP
+\-\-direction ( ingress | egress | ingress_egress )
+Configure the direction for the mirroring session.
+.TP
+\-\-id
+Specify the session id for updating a mirroring session.
+.TP
+\-\-vlan
+Specify the VLAN for RSPAN session. This VLAN has special properties and can't be assigned to any access ports.
+It works by mirroring the trafic from the source ports of an RSPAN session onto a VLAN that is dedicated 
+for the RSPAN session. This VLAN is then trunked to other switches, allowing the RSPAN session traffic 
+to be transported across multiple switches
+.TP
+\-\-type ( span | rspan )
+Configure the Mirroring session type.
+.SH EXIT STATUS
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-mirror create --src_intf e101-012-0 --dest_intf e101-013-0 --direction ingress --type span
+$ opx-config-mirror set --id 4  --dest_intf e101-014-0 --direction ingress_egress --src_intf e101-012-0
+$ opx-config-mirror create --src_intf e101-009-0 --dest_intf e101-010-0 --direction ingress --vlan 700 --type rspan
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-mirror(1)

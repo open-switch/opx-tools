@@ -1,0 +1,495 @@
+.TH opx-show-interface-stats "1" "2018-11-20" OPX "OPX utilities"
+.SH NAME
+opx-show-interface-stats \- Display Ethernet interface statistics counters
+.SH SYNOPSIS
+.SY opx-show-interface-stats
+.OP \-h
+.OP \-\-help
+.OP \-\-port port-list
+.OP \-\-nonzero
+.YS
+.SH DESCRIPTION
+This command prints the statistics for the given front-panel Ethernet interfaces.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+--port \fIport-list\fR
+Specify front panel Ethernet interface(s) to print.  A
+.I port-list
+is a comma-separated list of 1 one more ranges.  Each range is either a single interface, or a pair of interfaces of the form \fIfrom\fR..\fIto\fR, which specifies all interfaces from \fIfrom\fR to \fIto\fR inclusive.
+Examples are:
+.sp 1
+e101-001-0 \- Expands to e101-001-0
+.sp 1
+e101-001-0,e101-010-0 \- Expands to e101-001-0,e101-010-0
+.sp 1
+e101-001-0,e101-004-0..e101-006-0 \- Expands to e101-001-0,e101-004-0,e101-005-0,e101-006-0
+.sp 1
+If the port list is not specified, all Ethernet front-panel ports are shown.
+.TP
+--nonzero
+Show only those counters that are not zero.
+.SH STATISTICS COUNTERS
+.TP
+Alignment errors
+Number of inbound Ethernet frames that are not an integral number of octets in length and do not pass the FCS check.
+.TP
+Carrier sense errors
+Number of times that the carrier sense condition was lost or never asserted when attempting to transmit a frame.
+.sp
+This counter is incremented at most once per transmission attempt, even if the carrier sense condition fluctuates during a transmission attempt.
+.sp
+This counter does not increment when the interface is operating in full-duplex mode.
+.TP
+Deferred transmissions
+Number of Ethernet frames for which the first transmission attempt is delayed because the medium is busy.
+.sp
+This count does not include frames involved in collisions.
+.sp
+This counter does not increment when the interface is operating in full-duplex mode.
+.TP
+ECN marked packets
+Number of packets marked with explicit congestion notification (ECN).
+.TP
+Ethernet broadcast packets
+Number of Ethernet broadcast frames.
+.TP
+Ethernet collisions
+Number of Ethernet media access collisions.
+.TP
+Ethernet CRC align errors
+Number of CRC align errors.
+.TP
+Ethernet drop events
+Number of Ethernet drop events.
+.TP
+Ethernet fragments
+Number of Ethernet fragments.
+.TP
+Ethernet in packets (64 octets)
+Number of inbound Ethernet frames exactly 64 octets in length.
+.TP
+Ethernet in packets (65 to 127 octets)
+Number of inbound Ethernet frames between 65 and 127 octets in length (inclusive).
+.TP
+Ethernet in packets (128 to 255 octets)
+Number of inbound Ethernet frames between 128 and 255 octets in length (inclusive).
+.TP
+Ethernet in packets (256 to 511 octets)
+Number of inbound Ethernet frames between 256 and 511 octets in length (inclusive).
+.TP
+Ethernet in packets (512 to 1023 octets)
+Number of inbound Ethernet frames between 512 and 1023 octets in length (inclusive).
+.TP
+Ethernet in packets (1024 to 1518 octets)
+Number of inbound Ethernet frames between 1024 and 1518 octets in length (inclusive).
+.TP
+Ethernet in packets (1519 to 2047 octets)
+Number of inbound Ethernet frames between 1519 and 2047 octets in length (inclusive).
+.TP
+Ethernet in packets (2048 to 4095 octets)
+Number of inbound Ethernet frames between 2048 and 4095 octets in length (inclusive).
+.TP
+Ethernet in packets (4096 to 9216 octets)
+Number of inbound Ethernet frames between 4096 and 9216 octets in length (inclusive).
+.TP
+Ethernet jabbers
+Number of frames received that were longer than the MTU (excluding framing bits, but including FCS octets), and had either a bad Frame Check Sequence (FCS) with an integral number of octets (FCS Error) or a bad FCS with a non-integral number of octets (Alignment Error).
+.TP
+Ethernet multicast packets
+Number of Ethernet multicast frames.
+.TP
+Ethernet octets
+Number of octets in all Ethernet frames.
+.TP
+Ethernet out packets (64 octets)
+Number of transmitted Ethernet frames exactly 64 octets in length.
+.TP
+Ethernet out packets (65 to 127 octets)
+Number of transmitted Ethernet frames between 65 and 127 octets in length.
+.TP
+Ethernet out packets (128 to 255 octets)
+Number of transmitted Ethernet frames between 128 and 255 octets in length.
+.TP
+Ethernet out packets (256 to 511 octets)
+Number of transmitted Ethernet frames between 256 and 511 octets in length.
+.TP
+Ethernet out packets (512 to 1023 octets)
+Number of transmitted Ethernet frames between 512 and 1023 octets in length.
+.TP
+Ethernet out packets (1024 to 1518 octets)
+Number of transmitted Ethernet frames between 1024 and 1518 octets in length.
+.TP
+Ethernet out packets (1519 to 2047 octets)
+Number of transmitted Ethernet frames between 1519 and 2047 octets in length.
+.TP
+Ethernet out packets (2048 to 4095 octets)
+Number of transmitted Ethernet frames between 2048 and 4095 octets in length.
+.TP
+Ethernet out packets (4096 to 9216 octets)
+Number of transmitted Ethernet frames between 4096 and 9216 octets in length.
+.TP
+Ethernet oversize packets
+Number of oversized Ethernet frames.
+.TP
+Ethernet packets
+Number of Ethernet frames.
+.TP
+Ethernet rx no errors
+Number of incoming Ethernet frames received with no error.
+.TP
+Ethernet rx oversize packets
+Number of oversized incoming Ethernet frames.
+.TP
+Ethernet tx no errors
+Number of outoming Ethernet frames transmitted with no error.
+.TP
+Ethernet tx oversize packets
+Number of oversized outgoing Ethernet frames.
+.TP
+Ethernet undersize packets
+Number of undersized Ethernet frames.
+.TP
+Excessive collisions
+Number of outbound Ethernet frames for which transmission fails due to excessive collisions.
+.sp
+This counter does not increment when the interface is operating in full-duplex mode.
+.TP
+FCS errors
+Number of inbound Ethernet frames that are an integral number of octets in length but do not pass the FCS check.  This count does not include frames received with frame-too-long or frame-too-short error. 
+.TP
+Frame too long
+Number of inbound Ethernet frames that exceed the maximum permitted frame size.
+.sp
+This counter is incremented when the frameTooLong status is returned by the MAC service to the LLC (or other MAC user). Received frames for which multiple error conditions pertain are, according to the conventions of IEEE 802.3 Layer Management, counted exclusively according to the error status presented to the LLC.
+.TP
+Green discard dropped packets
+Number of green packets discarded.
+.TP
+In broadcast packets
+The number of inbound Ethernet frames that were addressed to a broadcast address.
+.TP
+In discards
+The number of inbound frames that were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a frame could be to free up buffer space. 
+.TP
+In errors
+The number of inbound Ethernet frames that contained errors preventing them from being deliverable to a higher-layer protocol.
+.TP
+In multicast packets
+The number of packets, delivered by this sub-layer to a higher (sub-)layer, that were addressed to a multicast address at this sub-layer.  For a MAC-layer protocol, this includes both Group and Functional addresses. 
+.TP
+In octets
+The total number of octets inbound on the interface, including framing characters.
+.TP
+In unicast packets
+The number of packets, delivered by this sub-layer to a higher (sub-)layer, that were not addressed to a multicast or broadcast address at this sub-layer.
+.TP
+In unknown opcodes
+Number of inbound Ethernet MAC Control frames that contain an opcode that is not supported.
+.TP
+In unknown protos
+For packet-oriented interfaces, the number of packets received via the interface that were discarded because of an unknown or unsupported protocol.  For character-oriented or fixed-length interfaces that support protocol multiplexing, the number of transmission units received via the interface that were discarded because of an unknown or unsupported protocol. For any interface that does not support protocol multiplexing, this counter is not present. 
+.TP
+Internal MAC receive errors
+Number of inbound Ethernet frames for which reception fails due to an internal MAC sublayer receive error. A frame is only counted by this counter if it is not counted by "Frame too long", "Alignment errors", or "FCS errors".
+.sp
+The precise meaning of this counter is implementation-specific.  In particular, this counter may count of receive errors that are not otherwise counted.
+.TP
+Internal MAC transmit errors
+Number of outbound Ethernet frames for which transmission fails due to an internal MAC sublayer transmit error. A frame is only counted by this counter if it is not counted by either "Late collisions", "Excessive collisions", or "Carrier sense errors".
+.sp
+The precise meaning of this counter is implementation-specific.  In particular, this counter may represent a count of transmission errors that are not otherwise counted.
+.TP
+IP in discards
+Number of IP in discards.
+.TP
+IP in forwarded datagrams
+Number of forwarded IP datagrams.
+.TP
+IP in header errors
+Number of incoming IP packets with header errors.
+.TP
+IP in receives
+Number of received IP packets.
+.TP
+IPv6 in address errors
+Number of IP address errors.
+.TP
+IPv6 in discards
+Number of discarded incoming IP packets.
+.TP
+IPv6 in header errors
+Number of incoming IPv6 packets with header errors.
+.TP
+IPv6 in multicast packets
+Number of incoming IPv6 multicast packets.
+.TP
+IPv6 in receives
+Number of received IPv6 packets.
+.TP
+IPv6 out discards
+Number of discarded outgoing IPv6 packets.
+.TP
+IPv6 out forwarded datagrams
+Number of forwarded IPv6 datagrams.
+.TP
+IPv6 out multicast packets
+Number of outgoing IPv6 multicast packets.
+.TP
+Late collisions
+Number of times that a collision is detected on later than one slotTime into the transmission of a packet.
+.sp
+A (late) collision is also considered as a (generic) collision for purposes of other collision-related statistics.
+.sp
+This counter does not increment when the interface is operating in full-duplex mode.
+.TP
+Multiple colision frames
+Number of inbound Ethernet frames that are involved in more than one collision and are subsequently transmitted successfully.
+.sp
+A frame that is counted by this counter is also counted by "Out unicast packets", "Out multicast packets", or "Out broadcast packets", and is not counted by "Single collision frames".
+.sp
+This counter does not increment when the interface is operating in full-duplex mode. 
+.TP
+Out broadcast packets
+The total number of packets that higher-level protocols requested be transmitted, and that were addressed to a broadcast address at this sub-layer, including those that were discarded or not sent. 
+.TP
+Out discards
+The number of outbound packets that were chosen to be discarded even though no errors had been detected to prevent their being transmitted.  One possible reason for discarding such a packet could be to free up buffer space. 
+.TP
+Out errors
+For packet-oriented interfaces, the number of outbound packets that could not be transmitted because of errors. For character-oriented or fixed-length interfaces, the number of outbound transmission units that could not be transmitted because of errors. 
+.TP
+Out multicast packets
+The total number of packets that higher-level protocols requested be transmitted, and that were addressed to a multicast address at this sub-layer, including those that were discarded or not sent.  For a MAC-layer protocol, this includes both Group and Functional addresses. 
+.TP
+Out octets
+The total number of octets transmitted out of the interface, including framing characters. 
+.TP
+Out queue length
+Transmit queue length.
+.TP
+Out unicast packets
+The total number of packets that higher-level protocols requested be transmitted, and that were not addressed to a multicast or broadcast address at this sub-layer, including those that were discarded or not sent. 
+.TP
+Pause rx frames
+A count of MAC Control frames received with an opcode indicating the PAUSE operation.
+.sp
+This counter does not increment when the interface is operating in half-duplex mode.
+.TP
+Pause tx frames
+A count of MAC Control frames transmitted with an opcode indicating the PAUSE operation.
+.sp
+This counter does not increment when the interface is operating in half-duplex mode.
+.TP
+PFC 0 rx packets
+Number of received level 0 priority-based flow control frames.
+.TP
+PFC 0 tx packets
+Number of transmitted level 0 priority-based flow control frames.
+.TP
+PFC 1 rx packets
+Number of received level 1 priority-based flow control frames.
+.TP
+PFC 1 tx packets
+Number of transmitted level 1 priority-based flow control frames.
+.TP
+PFC 2 rx packets
+Number of received level 2 priority-based flow control frames.
+.TP
+PFC 2 tx packets
+Number of transmitted level 2 priority-based flow control frames.
+.TP
+PFC 3 rx packets
+Number of received level 3 priority-based flow control frames.
+.TP
+PFC 3 tx packets
+Number of transmitted level 3 priority-based flow control frames.
+.TP
+PFC 4 rx packets
+Number of received level 4 priority-based flow control frames.
+.TP
+PFC 4 tx packets
+Number of transmitted level 4 priority-based flow control frames.
+.TP
+PFC 5 rx packets
+Number of received level 5 priority-based flow control frames.
+.TP
+PFC 5 tx packets
+Number of transmitted level 5 priority-based flow control frames.
+.TP
+PFC 6 rx packets
+Number of received level 6 priority-based flow control frames.
+.TP
+PFC 6 tx packets
+Number of transmitted level 6 priority-based flow control frames.
+.TP
+PFC 7 rx packets
+Number of received level 7 priority-based flow control frames.
+.TP
+PFC 7 tx packets
+Number of transmitted level 7 priority-based flow control frames.
+.TP
+RED discard dropped packets
+Number of packets dropped due to RED.
+.TP
+Rx LPI count
+Number of times state changed from high power mode to low power mode in RX direction.
+.TP
+Rx LPI duration
+Low power mode duration (in microseconds) in RX direction.  This duration is cumulative since EEE enable or last clear of statistics.
+.TP
+Single collision frames
+Number of inbound Ethernet frames that are involved in a single collision, and are subsequently transmitted successfully.
+.sp
+A frame that is counted by an instance of this counter is also counted by "Out unicast packets", "Out multicast packets", or "Out broadcast packets", and is not counted by "Multiple collision frames".
+.sp
+This counter does not increment when the interface is operating in full-duplex mode.
+.TP
+SQE test errors
+Number of times that the SQE TEST ERROR is received. The SQE TEST ERROR is set in accordance with the rules for verification of the SQE detection mechanism in the PLS Carrier Sense Function as described in IEEE Std. 802.3, 2000 Edition, section 7.2.4.6.
+.sp
+This counter does not increment on interfaces operating at speeds greater than 10 Mb/s, or on interfaces operating in full-duplex mode. 
+.TP
+Symbol errors
+For an interface operating at 100 Mb/s, the number of times there was an invalid data symbol when a valid carrier was present.
+.sp
+For an interface operating in half-duplex mode at 1000 Mb/s, the number of times the receiving media is non-idle (a carrier event) for a period of time equal to or greater than slotTime, and during which there was at least one occurrence of an event that causes the PHY to indicate 'Data reception error' or 'carrier extend error' on the GMII.
+.sp
+For an interface operating in full-duplex mode at 1000 Mb/s, the number of times the receiving media is non-idle (a carrier event) for a period of time equal to or greater than minFrameSize, and during which there was at least one occurrence of an event that causes the PHY to indicate 'Data reception error' on the GMII.
+.sp
+For an interface operating at 10 Gb/s, the number of times the receiving media is non-idle (a carrier event) for a period of time equal to or greater than minFrameSize, and during which there was at least one occurrence of an event that causes the PHY to indicate 'Receive Error' on the XGMII.
+.sp
+This counter is incremented at most once per carrier event, even if multiple symbol errors occur during the carrier event.  This counter does not increment if a collision is present.
+.sp
+This counter does not increment when the interface is operating at 10 Mb/s.
+.TP
+Time stamp
+Timestamp.
+.TP
+Tx LPI count
+Number of times state changed from high power mode to low power mode in TX direction.
+.TP
+Tx LPI duration
+Low power mode duration (in microseconds) in TX direction.  This duration is cumulative since EEE enable or last clear of statistics.
+.TP
+Yellow discard dropped packets
+Number of yellow packets discarded.
+.SH EXIT STATUS
+If an invalid port list is specified, the exit status shall be 1.
+.br
+If there is a syntax error in the given arguments, the exit status shall be 2.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-show-interface-stats --port e101-001-0
+Port e101-001-0
+        Alignment errors:                           0
+        Carrier sense errors:                       0
+        Deferred transmissions:                     0
+        ECN marked packets:                         0
+        Ethernet broadcast packets:                 0
+        Ethernet collisions:                        0
+        Ethernet CRC align errors:                  0
+        Ethernet drop events:                       0
+        Ethernet fragments:                         0
+        Ethernet in packets (64 octets):            0
+        Ethernet in packets (65 to 127 octets):     330704
+        Ethernet in packets (128 to 255 octets):    82857
+        Ethernet in packets (256 to 511 octets):    0
+        Ethernet in packets (512 to 1023 octets):   0
+        Ethernet in packets (1024 to 1518 octets):  0
+        Ethernet in packets (1519 to 2047 octets):  0
+        Ethernet in packets (2048 to 4095 octets):  0
+        Ethernet in packets (4096 to 9216 octets):  0
+        Ethernet jabbers:                           0
+        Ethernet multicast packets:                 662274
+        Ethernet octets:                            94138869
+        Ethernet out packets (64 octets):           0
+        Ethernet out packets (65 to 127 octets):    316757
+        Ethernet out packets (128 to 255 octets):   82850
+        Ethernet out packets (256 to 511 octets):   0
+        Ethernet out packets (512 to 1023 octets):  0
+        Ethernet out packets (1024 to 1518 octets): 0
+        Ethernet out packets (1519 to 2047 octets): 0
+        Ethernet out packets (2048 to 4095 octets): 0
+        Ethernet out packets (4096 to 9216 octets): 0
+        Ethernet oversize packets:                  0
+        Ethernet packets:                           813168
+        Ethernet rx no errors:                      413561
+        Ethernet rx oversize packets:               0
+        Etherent tx no errors:                      399607
+        Ethernet tx oversize packets:               0
+        Ethernet undersize packets:                 0
+        Excessive collisions:                       0
+        FCS errors:                                 0
+        Frame too long:                             0
+        Green discard dropped packets:              0
+        In broadcast packets:                       0
+        In discards:                                0
+        In errors:                                  0
+        In multicast packets:                       330986
+        In octets:                                  47697992
+        In unicast packets:                         82575
+        In unknown opcodes:                         0
+        In unknown protocols:                       0
+        Internal MAC receive errors:                0
+        Internal MAC transmit errors:               0
+        IP in discards:                             0
+        IP in forwarded datagrams:                  0
+        IP in header errors:                        0
+        IP in receives:                             13
+        IPv6 in address errors:                     0
+        IPv6 in discards:                           0
+        IPv6 in header errors:                      0
+        IPv6 in multicast packets:                  0
+        IPv6 in receives:                           39
+        IPv6 out discards:                          0
+        IPv6 out forwarded datagrams:               0
+        IPv6 out multicast packets:                 0
+        Late collisions:                            0
+        Multiple collision frames:                  0
+        Out broadcast packets:                      0
+        Out discards:                               0
+        Out errors:                                 0
+        Out multicast packets:                      331288
+        Out octets:                                 46440877
+        Out queue length:                           0
+        Out unicast packets:                        68319
+        Pause rx packets:                           0
+        Pause tx packets:                           0
+        PFC 0 rx packets:                           0
+        PFC 0 tx packets:                           0
+        PFC 1 rx packets:                           0
+        PFC 1 tx packets:                           0
+        PFC 2 rx packets:                           0
+        PFC 2 tx packets:                           0
+        PFC 3 rx packets:                           0
+        PFC 3 tx packets:                           0
+        PFC 4 rx packets:                           0
+        PFC 4 tx packets:                           0
+        PFC 5 rx packets:                           0
+        PFC 5 tx packets:                           0
+        PFC 6 rx packets:                           0
+        PFC 6 tx packets:                           0
+        PFC 7 rx packets:                           0
+        PFC 7 tx packets:                           0
+        RED discard dropped packets:                0
+        Rx LPI count:                               0
+        Rx LPI duration:                            0
+        Single collision frames:                    0
+        SQE test errors:                            0
+        Symbol errors:                              0
+        Time stamp:                                 4049502
+        Tx LPI count:                               0
+        Tx LPI duration:                            0
+        Yellow discard dropped packets:             0
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.

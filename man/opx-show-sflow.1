@@ -1,0 +1,66 @@
+.TH opx-show-sflow "1" "2018-12-09" OPX "OPX utilities"
+.SH NAME
+opx-show-sflow \- Display Sflow configuration and status
+.SH SYNOPSIS
+.SY opx-show-sflow
+.OP \-h
+.OP \-\-help
+.OP \-\-id ID
+.OP \-\-port PORT
+.OP \-\-direction "\fR( \fBingress\fR | \fBegress\fR  \fBingress_egress\fR )"
+.YS
+.SH DESCRIPTION
+This command prints the current configuration and status of Sflow sessions
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-id
+Session identifier
+.TP
+\-\-port
+Specify front panel Ethernet interface
+.TP
+\-\-direction
+Specify the direction (ingress/egress/ingress_egress)
+.SH OUTPUT
+.TP
+Id
+Displays the Sflow session ID.
+.TP
+Direction 
+Displays the direction (ingress/egress/ingress_egress) on which the packet sampling is configured
+.TP
+Rate 
+Displays the Sampling rate. One packet out of <Rate> no of packets to be sampled through this session.
+.TP
+Port
+Displays the front panel Ethernet interface the session is enabled on.
+.SH EXIT STATUS
+ 0      if OK,
+ 1      if minor problems (e.g., syntax error, wrong perameters passed),
+ 2      if serious trouble (e.g., the CPS commit fails).
+.SH EXAMPLE
+.nf
+.eo
+$opx-show-sflow --summary
+Session ID | Direction | Rate  | Port
+-------------------------------------------
+2          | egress    | 14000 | e101-012-0
+1          | ingress   | 10000 | e101-010-0
+
+$opx-show-sflow --id 2
+Session ID=2
+        Direction: egress
+        Rate:      14000
+        Port:      e101-012-0
+
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-config-sflow(1)

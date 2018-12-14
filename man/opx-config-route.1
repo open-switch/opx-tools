@@ -1,0 +1,45 @@
+.TH opx-config-route "1" "2018-12-10" OPX "OPX utilities"
+.SH NAME
+opx-config-route \- Configure static route
+.SH SYNOPSIS
+.SY opx-config-route
+.OP \-h
+.OP \-\-help
+.OP create/delete/set
+.OP \-\-vrf_name VRF name
+.OP \-\-nh Next hop address
+.OP \-\-dst Destination address
+.YS
+.SH DESCRIPTION
+This command creates and deletes static routes in the given namespace(VRF). 
+.SH OPTIONS
+.TP
+\-h, \-\-help
+Print help text.
+.TP
+\-\-vrf_name \ vrf
+VRF name
+.TP
+.RI --nh \ next-hop-address
+Specify next hop address.
+.TP
+.RI --dst \ destination-adress
+Specify a destination address 
+.SH EXIT STATUS
+If an invalid address is specified, the exit status shall be 1.
+.br
+Otherwise, the exit status is 0.
+.SH EXAMPLE
+.nf
+.eo
+$ opx-config-route create --vrf_name default --dst 192.168.10.2/24 --nh "127.0.0.1 127.0.0.2" 
+$ opx-config-route set --vrf_name default --dst 192.168.10.2 --nh "127.0.0.1 127.0.0.3"
+$ opx-config-route del --vrf_name default --dst 192.168.10.2 
+.ec
+.fi
+.SH REPORTING BUGS
+To report any OPX software bugs, please refer to https://github.com/open-switch/opx-docs/wiki/Report-bugs.
+.SH COPYRIGHT
+Copyright \(co 2018 Dell Inc. and its subsidiaries. All Rights Reserved.
+.SH SEE ALSO
+opx-show-route(1)

@@ -1,0 +1,209 @@
+#!/usr/bin/python
+
+# Copyright (c) 2017 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+
+import cps
+import cps_utils
+
+def cps_attr_get(cps_data, attr):
+    try:
+        return cps_utils.cps_attr_types_map.from_data(attr, cps_data[attr])
+    except:
+        return ""
+
+def attr_map(val, map):
+        return 'Invalid' if val not in map else map[val]
+
+def entity_type_to_string(entity_type):
+        return attr_map(entity_type, {1: "PSU", 2: "Fan tray", 3: "Card"})
+
+def oper_status_to_string(oper_status):
+        return attr_map(oper_status, {1: 'Up', 2: 'Down', 3: 'Testing', 4: 'Unknown', 5: 'Dormant', 6: 'Not present', 7: 'Lower layer down', 8: 'Fail'})
+
+def fan_airflow_to_string(fan_airflow):
+    return attr_map(fan_airflow, {1: 'Unknown', 2: 'Normal', 3: 'Reverse', 4: 'NA'})
+
+def fault_type_to_string(fault_type):
+        return attr_map(fault_type, {1: 'OK', 2: 'Unknown', 3: 'Communication failure', 4: 'Configuration error', 5: 'Compatibility error', 6: 'Hardware failure', 7: 'No power'})
+
+def fault_type_down(fault_type):
+        return (fault_type == 3 or fault_type == 7)
+
+cps_chassis_data = []
+cps_entity_data = []
+cps_psu_data = []
+cps_fan_tray_data = []
+cps_fan_data = []
+cps_temp_sensor_data = []
+entity_faults = {}
+
+def cps_data_get():
+    cps.get([cps.key_from_name('observed','base-pas/chassis')], cps_chassis_data)
+    cps.get([cps.key_from_name('observed','base-pas/entity')], cps_entity_data)
+    cps.get([cps.key_from_name('observed','base-pas/psu')], cps_psu_data)
+    cps.get([cps.key_from_name('observed','base-pas/fan-tray')], cps_fan_tray_data)
+    cps.get([cps.key_from_name('observed','base-pas/fan')], cps_fan_data)
+    cps.get([cps.key_from_name('observed','base-pas/temperature')], cps_temp_sensor_data)
+
+def chassis_print():
+    if cps_chassis_data == []:
+        return
+    d = cps_chassis_data[0]['data']
+    print 'Chassis'
+    print '\tOperating status:\t\t', oper_status_to_string(cps_attr_get(d, 'base-pas/chassis/oper-status'))
+    fault_type = cps_attr_get(d, 'base-pas/chassis/fault-type')
+    print '\tFault type:\t\t\t', fault_type_to_string(fault_type)
+    if fault_type_down(fault_type):
+        return
+    try:
+        print '\tVendor name:\t\t', cps_attr_get(d, 'base-pas/chassis/vendor-name')
+        print '\tService tag:\t\t', cps_attr_get(d, 'base-pas/chassis/service-tag')
+        print '\tPPID:\t\t\t\t', cps_attr_get(d, 'base-pas/chassis/ppid')
+        print '\tPlatform name:\t\t\t', cps_attr_get(d, 'base-pas/chassis/platform-name')
+        print '\tProduct name:\t\t\t', cps_attr_get(d, 'base-pas/chassis/product-name')
+        print '\tHardware version:\t\t', cps_attr_get(d, 'base-pas/chassis/hw-version')
+        print '\tNumber of MAC addresses:\t', cps_attr_get(d, 'base-pas/chassis/num_mac_addresses' )
+        val = cps_attr_get(d, 'base-pas/chassis/base_mac_addresses')
+        print '\tBase MAC address:\t\t', val[0:2] + ':' + val[2:4] + ':' + val[4:6] + ':' + val[6:8] + ':' + val[8:10] + ':' + val[10:12]
+    except:
+        pass
+
+def entity_print(entity_data):
+    entity_type = cps_attr_get(entity_data, 'base-pas/entity/entity-type')
+    slot = cps_attr_get(entity_data, 'base-pas/entity/slot')
+    print '\tSlot', slot
+    present = cps_attr_get(entity_data, 'base-pas/entity/present')
+    print '\t\tPresent:\t\t', 'Yes' if present != 0 else 'No'
+    if present == 0:
+        return  False
+    print '\t\tOperating status:\t', oper_status_to_string(cps_attr_get(entity_data, 'base-pas/entity/oper-status'))
+    fault_type = cps_attr_get(entity_data, 'base-pas/entity/fault-type')
+    entity_faults[(entity_type, slot)] = fault_type
+    print '\t\tFault type:\t\t', fault_type_to_string(fault_type)
+    if fault_type_down(fault_type):
+        return False
+    try:
+        print '\t\tVendor name:\t\t', cps_attr_get(entity_data, 'base-pas/entity/vendor-name')
+        print '\t\tService tag:\t\t', cps_attr_get(entity_data, 'base-pas/entity/service-tag')
+        print '\t\tPPID:\t\t\t', cps_attr_get(entity_data, 'base-pas/entity/ppid')
+        print '\t\tPlatform name:\t\t\t', cps_attr_get(entity_data, 'base-pas/entity/platform-name')
+        print '\t\tProduct name:\t\t', cps_attr_get(entity_data, 'base-pas/entity/product-name')
+        print '\t\tHardware version:\t\t', cps_attr_get(entity_data, 'base-pas/entity/hw-version')
+    except:
+        pass
+    return True
+
+def psu_print(entity_data, psu_data):
+    if not entity_print(entity_data):
+        return
+    try:
+        print '\t\tInput:\t\t\t', attr_map(cps_attr_get(psu_data, 'base-pas/psu/input-type'), {1: 'Unknown', 2: 'AC', 3: 'DC'})
+        print '\t\tFan airflow:\t\t', fan_airflow_to_string(cps_attr_get(psu_data, 'base-pas/psu/fan-airflow-type'))
+    except:
+        pass
+
+def all_psus_print():
+    if cps_entity_data == [] or cps_psu_data == []:
+        return
+    print 'Power supplies'
+    for e in cps_entity_data:
+        entity_data = e['data']
+        if cps_attr_get(entity_data, 'base-pas/entity/entity-type') != 1:
+            continue
+        slot = cps_attr_get(entity_data, 'base-pas/entity/slot')
+        psu_found = False
+        for p in cps_psu_data:
+            psu_data = p['data']
+            if  cps_attr_get(psu_data, 'base-pas/psu/slot') == slot:
+                psu_found = True
+                break
+        if not psu_found:
+            print '*** ERROR: No PSU found for entity'
+            continue
+        psu_print(entity_data, psu_data)
+
+def fan_tray_print(entity_data, fan_tray_data):
+    if not entity_print(entity_data):
+        return
+    try:
+        print '\t\tFan airflow:\t\t', fan_airflow_to_string(cps_attr_get(fan_tray_data, 'base-pas/fan-tray/fan-airflow-type'))
+    except:
+        pass
+
+def all_fan_trays_print():
+    if cps_entity_data == [] or cps_fan_tray_data == []:
+        return
+    print 'Fan trays'
+    for e in cps_entity_data:
+        entity_data = e['data']
+        if cps_attr_get(entity_data, 'base-pas/entity/entity-type') != 2:
+            continue
+        slot = cps_attr_get(entity_data, 'base-pas/entity/slot')
+        fan_tray_found = False
+        for p in cps_fan_tray_data:
+            fan_tray_data = p['data']
+            if  cps_attr_get(fan_tray_data, 'base-pas/fan-tray/slot') == slot:
+                fan_tray_found = True
+                break
+        if not fan_tray_found:
+            print '*** ERROR: No fan tray found for entity'
+            continue
+        fan_tray_print(entity_data, fan_tray_data)
+
+def fan_print(fan_data):
+    entity_type = cps_attr_get(fan_data, 'base-pas/fan/entity-type')
+    slot = cps_attr_get(fan_data, 'base-pas/fan/slot')
+    if entity_faults.get((entity_type, slot), 7) == 7:
+        return
+    print '\tFan', str(cps_attr_get(fan_data, 'base-pas/fan/fan-index')) + ',', entity_type_to_string(entity_type), 'slot', slot
+    print '\t\tOperating status:\t', oper_status_to_string(cps_attr_get(fan_data, 'base-pas/fan/oper-status'))
+    fault_type = cps_attr_get(fan_data, 'base-pas/fan/fault-type')
+    print '\t\tFault type:\t\t', fault_type_to_string(fault_type)
+    if fault_type_down(fault_type):
+        return
+    print '\t\tSpeed (RPM):\t\t', cps_attr_get(fan_data, 'base-pas/fan/speed')
+    print '\t\tSpeed (%):\t\t', cps_attr_get(fan_data, 'base-pas/fan/speed_pct')
+
+def all_fans_print():
+    if cps_fan_data == []:
+        return
+    print 'Fans'
+    for f in cps_fan_data:
+        fan_print(f['data'])
+
+def temp_sensor_print(temp_sensor_data):
+    print '\tSensor', str(cps_attr_get(temp_sensor_data, 'base-pas/temperature/name')) + ',', entity_type_to_string(cps_attr_get(temp_sensor_data, 'base-pas/temperature/entity-type')), 'slot', cps_attr_get(temp_sensor_data, 'base-pas/temperature/slot')
+    print '\t\tOperating status:\t\t', oper_status_to_string(cps_attr_get(temp_sensor_data, 'base-pas/temperature/oper-status'))
+    fault_type = cps_attr_get(temp_sensor_data, 'base-pas/temperature/fault-type')
+    print '\t\tFault type:\t\t\t', fault_type_to_string(fault_type)
+    if fault_type_down(fault_type):
+        return
+    print '\t\tTemperature (degrees C):\t', cps_attr_get(temp_sensor_data, 'base-pas/temperature/temperature')
+        
+def all_temp_sensors_print():
+    if cps_temp_sensor_data == []:
+        return
+    print 'Temperature sensors'
+    for s in cps_temp_sensor_data:
+        temp_sensor_print(s['data'])
+
+if __name__ == '__main__':
+    cps_data_get()
+    chassis_print()
+    all_psus_print()
+    all_fan_trays_print()
+    all_fans_print()
+    all_temp_sensors_print()
