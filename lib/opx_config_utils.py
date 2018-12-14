@@ -280,6 +280,23 @@ def print_section(lvl, heading, li, heading_width=None):
         print_section_attr(lvl, x.heading, heading_width, x.value, getattr(x, 'outmap', None), getattr(x, 'func', None), getattr(x, 'suffix', None))
 
 
+def _split(s, n, d):
+    li = s.split(d)
+    s = ''
+    while len(li) > 0:
+        if d == ' ':
+            ss = cjoin(s, ' ', li[0])
+        else:
+            ss = s + li[0]
+            if len(li) > 1:
+                ss += d
+        if len(ss) > n:
+            break
+        s = ss
+        li.pop(0)
+    return [s, d.join(li)]
+            
+
 def print_summary_line(r, fs):
     ncol = len(fs)
     while reduce(lambda u, v: u + v, map(lambda x: len(x), r)) > 0:
@@ -288,33 +305,17 @@ def print_summary_line(r, fs):
             if i >  0:
                 sys.stdout.write(' | ')
             n = fs[i]
-            s = r[i]
-            if len(s) <= n:
-                r[i] = ''
+            s = ''
+            for d in [' ', '-', ':']:
+                li = _split(r[i], n, d)
+                if len(li[0]) > len(s):
+                    s   = li[0]
+                    rem = li[1]
+            if s != '':
+                r[i] = rem
             else:
-                li = s.split(' ')
-                s = ''
-                while len(li) > 0:
-                    ss = cjoin(s, ' ', li[0])
-                    if len(ss) > n:
-                        break
-                    s = ss
-                    li.pop(0)
-                if s == '':
-                    li2 = li[0].split('-')
-                    while len(li2) > 0:
-                        ss = s + li2[0]
-                        if len(li2) > 1:
-                            ss += '-'
-                        if len(ss) > n:
-                            break
-                        s = ss
-                        li2.pop(0)
-                    if len(li2) > 0:
-                        li[0] = '-'.join(li2)
-                    else:
-                        li.pop(0)
-                r[i] = ' '.join(li)
+                s = r[i][0:n]
+                r[i] = r[i][n:]
             sys.stdout.write(('{:' + str(n) + '}').format(s))
             i += 1
         print
