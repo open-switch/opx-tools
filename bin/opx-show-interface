@@ -28,7 +28,7 @@ args = parser.parse_args()
 
 enabled_outmap = {0: 'no', 1: 'yes'}
 
-oper_status_outmap = {1: 'up', 2: 'down', 3: 'testing', 4: 'unknown', 5: 'dormant', 6: 'not present', 7: 'lower layer down'}
+oper_status_outmap = {1: 'up', 2: 'down', 3: 'testing', 4: 'unknown', 5: 'dormant', 6: 'not-present', 7: 'lower-layer-down'}
 
 speed_outmap = {1: '10M', 2: '100M', 3: '1G', 4: '10G', 5: '25G', 6: '40G', 7: '100G', 8: 'auto', 9: '20G', 10: '50G',
                 11: '200G', 12: '400G', 13: '4G-FC', 14: '8G-FC', 15: '16G-FC', 16: '32G-FC', 17: '2G-FC', 18: '64G-FC',
@@ -98,7 +98,7 @@ for port in port_range_str_to_port_list(args.port, ['e']):
            ),
            Struct(heading='Supported autonegotiation',
                   value=cps_attr_data_get(status, 'dell-if/if/interfaces-state/interface/supported-autoneg'),
-                  outmap={1: 'none', 2: 'on', 3: 'off', 4: 'on and off'}
+                  outmap={1: 'none', 2: 'on', 3: 'off', 4: 'on-and-off'}
            ),
            Struct(heading='Supported speed',
                   value=cps_attr_data_get(status, 'dell-if/if/interfaces-state/interface/supported-speed'),
