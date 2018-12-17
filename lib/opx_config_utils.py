@@ -140,8 +140,8 @@ def _ports_by_type(port_types):
         if t == 'br' and (port_types is None or 'vlan' in port_types):
             vid = int(nm[2:])
             d = r['data']
-            port_names += map(lambda x: '{}.{}'.format(str(x)[:-1], vid), d.get('dell-if/if/interfaces/interface/tagged-ports', []))
-            port_names += map(lambda x: '{}.{}'.format(str(x)[:-1], vid), d.get('dell-if/if/interfaces/interface/untagged-ports', []))
+            port_names += ['{}.{}'.format(str(x).strip('\x00'), vid) for x in d.get('dell-if/if/interfaces/interface/tagged-ports', [])]
+            port_names += ['{}.{}'.format(str(x).strip('\x00'), vid) for x in d.get('dell-if/if/interfaces/interface/untagged-ports', [])]
         if port_types is not None and t not in port_types:
             continue
         port_names.append(nm)
