@@ -43,7 +43,7 @@ def cps_attr_data_get(obj, attr):
     if attr not in d:
         return None
     a = d[attr]
-    if type(a) == list:
+    if isinstance(a, list):
         return map(lambda x: cps_utils.cps_attr_types_map.from_data(attr, x), a)
     return cps_utils.cps_attr_types_map.from_data(attr, d[attr])
 
@@ -96,20 +96,20 @@ def port_name_canonical(nm):
         if len(s) != 3:
             return None
         try:
-            n = map(lambda x: int(x), s)
-        except:
+            n = [int(x) for x in s]
+        except ValueError:
             return None
         return 'e{:03d}-{:03d}-{:1d}'.format(n[0], n[1], n[2])
     if t == 'br':
         try:
             n = int(nm[2:])
-        except:
+        except ValueError:
             return None
         return 'br{}'.format(n)
     if t == 'bond':
         try:
             n = int(nm[4:])
-        except:
+        except ValueError:
             return None
         return 'bond{}'.format(n)
     if t == 'vlan':
@@ -119,18 +119,18 @@ def port_name_canonical(nm):
             return None
         try:
             vid = int(s[1])
-        except:
+        except ValueError:
             return None
         return '{}.{}'.format(parent, vid)
     return None
 
 
-def _port_range_str_to_port_list(s, port_types):
+def _ports_by_type(port_types):
     resp = cps_get('target',
                    'dell-base-if-cmn/if/interfaces/interface',
                    {}
                    )
-    if resp is None or len(resp) == 0:
+    if not resp:
         return []
     port_names = []
     port_idxs = {}
@@ -147,38 +147,48 @@ def _port_range_str_to_port_list(s, port_types):
         port_names.append(nm)
         port_idxs[nm] = cps_key_attr_data_get(r, 'dell-base-if-cmn/if/interfaces/interface/if-index')
     port_names.sort()
+    return (port_names, port_idxs)
+
+
+def _parse_port_ranges(s, port_names, port_idxs):
     result = []
+    for r in s.split(','):
+        rr = r.split('..')
+        if len(rr) < 1 or len(rr) > 2:
+            return None
+        if len(rr) == 1:
+            rr = [rr[0], rr[0]]
+        t1 = port_name_to_type(rr[0])
+        t2 = port_name_to_type(rr[1])
+        if t1 is None or t2 is None or t2 != t1:
+            return None
+        c1 = port_name_canonical(rr[0])
+        c2 = port_name_canonical(rr[1])
+        if c1 not in port_names or c2 not in port_names:
+            return None
+        i1 = port_names.index(c1)
+        i2 = port_names.index(c2)
+        while i1 <= i2:
+            nm = port_names[i1]
+            s = Struct(name=nm)
+            if nm in port_idxs:
+                s.idx = port_idxs[nm]
+            result.append(s)
+            i1 += 1
+    return result
+    
+
+def _port_range_str_to_port_list(s, port_types):
+    port_names, port_idxs = _ports_by_type(port_types)
     if s is None:
+        result = []
         for nm in port_names:
             s = Struct(name=nm)
             if nm in port_idxs:
                 s.idx = port_idxs[nm]
             result.append(s)
-    else:
-        for r in s.split(','):
-            rr = r.split('..')
-            if len(rr) < 1 or len(rr) > 2:
-                return None
-            if len(rr) == 1:
-                rr = [rr[0], rr[0]]
-            t1 = port_name_to_type(rr[0])
-            t2 = port_name_to_type(rr[1])
-            if t1 is None or t2 is None or t2 != t1:
-                return None
-            c1 = port_name_canonical(rr[0])
-            c2 = port_name_canonical(rr[1])
-            if c1 not in port_names or c2 not in port_names:
-                return None
-            i1 = port_names.index(c1)
-            i2 = port_names.index(c2)
-            while i1 <= i2:
-                nm = port_names[i1]
-                s = Struct(name=nm)
-                if nm in port_idxs:
-                    s.idx = port_idxs[nm]
-                result.append(s)
-                i1 += 1
-    return result
+        return result
+    return _parse_port_ranges(s, port_names, port_idxs)
 
 
 ###########################################################################
@@ -205,9 +215,9 @@ def cjoin(s1, sep, s2):
     return s2 if s1 == '' else s1 + sep + s2
 
 
-def _attr_val_to_str(val, fmt=None, map=None, func=None):
-    if map is not None:
-        val = map.get(val, 'UNKNOWN')
+def _attr_val_to_str(val, fmt=None, outmap=None, func=None):
+    if outmap is not None:
+        val = outmap.get(val, 'UNKNOWN')
     elif func is not None:
         val = func(val)
     if fmt is None:
@@ -215,13 +225,13 @@ def _attr_val_to_str(val, fmt=None, map=None, func=None):
     return fmt.format(val)
 
 
-def attr_val_to_str(val, fmt=None, map=None, func=None):
-    if type(val) == list:
+def attr_val_to_str(val, fmt=None, outmap=None, func=None):
+    if isinstance(val, list):
         result = ''
         for x in val:
-            result = cjoin(result, ' ', _attr_val_to_str(x, fmt, map, func))
+            result = cjoin(result, ' ', _attr_val_to_str(x, fmt, outmap, func))
         return result
-    return _attr_val_to_str(val, fmt, map, func)
+    return _attr_val_to_str(val, fmt, outmap, func)
     
 
 _indent_width = 4
@@ -231,12 +241,12 @@ def print_indent(lvl):
     sys.stdout.write(lvl * _indent_str)
         
 
-def print_section_attr(lvl, heading, heading_width, val, map=None, func=None, suffix=None):
+def print_section_attr(lvl, heading, heading_width, val, outmap=None, func=None, suffix=None):
     heading += ':'
     ldr = lvl * _indent_str
     vldr = ldr + heading_width * ' '
     out = ('{}{:' + str(heading_width - 1) +'}').format(ldr, heading)
-    for w in attr_val_to_str(val, None, map, func).split(' '):
+    for w in attr_val_to_str(val, None, outmap, func).split(' '):
         out2 = out + ' ' + w
         if len(out2) > 80:
             sys.stdout.write(out)
@@ -283,7 +293,7 @@ def print_section(lvl, heading, li, heading_width=None):
 def _split(s, n, d):
     li = s.split(d)
     s = ''
-    while len(li) > 0:
+    while li:
         if d == ' ':
             ss = cjoin(s, ' ', li[0])
         else:
@@ -299,7 +309,7 @@ def _split(s, n, d):
 
 def print_summary_line(r, fs):
     ncol = len(fs)
-    while reduce(lambda u, v: u + v, map(lambda x: len(x), r)) > 0:
+    while reduce(lambda u, v: u + v, [len(x) for x in r]) > 0:
         i = 0
         while  i < ncol:
             if i >  0:
@@ -336,7 +346,7 @@ def print_summary_line(r, fs):
 def print_summary(headings, values, outmaps=None, funcs=None):
     nf = len(headings)
     a = [nf * [''] for i in range(len(values))]
-    fs = map(lambda x: len(x), headings)
+    fs = [len(x) for x in headings]
     om = nf * [None] if outmaps is None else outmaps
     ff = nf * [None] if funcs is None else funcs
     i = 0
@@ -367,7 +377,7 @@ def print_summary(headings, values, outmaps=None, funcs=None):
         print_summary_line(r, fs)
 
 
-def chk_set(str, _set):
-    li2 = str.split(',')
+def chk_set(_str, _set):
+    li2 = _str.split(',')
     set2 = set(li2)
     return len(set2) == len(li2) and set2 <= _set
