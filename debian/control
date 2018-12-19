@@ -3,12 +3,12 @@ Section: net
 Priority: optional
 Maintainer: Dell EMC <ops-dev@lists.openswitch.net>
 Build-Depends:
- debhelper (>= 9), dh-autoreconf, exuberant-ctags 
+ debhelper (>= 9), dh-autoreconf, exuberant-ctags
 Standards-Version: 3.9.3
 Vcs-Browser: https://github.com/open-switch/opx-tools
 Vcs-Git: https://github.com/open-switch/opx-tools.git
 
 Package: opx-tools
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-apt, python-opx-cps (>= 3.6.2), libopx-base-model1 (>= 3.109.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-apt, python-opx-cps (>= 3.6.2), libopx-base-model1 (>= 3.109.0), man-db
 Description: Openswitch tools for OPX Package Management, Config and Show utilities

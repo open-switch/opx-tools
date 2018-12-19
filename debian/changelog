@@ -1,3 +1,9 @@
+opx-tools (2.0.1) unstable; urgency=medium
+
+  * Update: Include man-db package as install dependency
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Tue, 18 Dec 2018 19:32:35 -0700
+
 opx-tools (2.0.0) unstable; urgency=medium
 
   * Feature: OPX config/show utilities
