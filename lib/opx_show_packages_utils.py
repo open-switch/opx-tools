@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys
 import json
-import opx_python_common_utils
+import lib.opx_python_common_utils
 
 cfg_file = "/etc/opx/manifest.json"
 
@@ -31,7 +31,7 @@ def get_dpkg_info(packages_cfg_info):
                 if l:
                     try:
                         (k,v) = l.split(':',1)
-                    except Exception:
+                    except ValueError:
                         pass
                     
                     tmp_dict[k] = v
@@ -55,7 +55,7 @@ def get_dpkg_info(packages_cfg_info):
             packages_info[package_name_cfg] = tmp_dict
             
             
-        except Exception:
+        except ValueError:
             pass
             
     return packages_info            
@@ -87,5 +87,3 @@ def get_altered_packages():
             
 def get_upgraded_packages():
     return get_specific_package_info('Upgraded')
-
-
