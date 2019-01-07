@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import opx_python_common_utils
+import lib.opx_python_common_utils
 
 def get_system_state():
     cmd = "systemctl status"
@@ -12,7 +12,7 @@ def get_system_state():
                 return v.strip()
                 
             
-        except Exception:
+        except ValueError:
             continue
     return ""
     
@@ -25,7 +25,7 @@ def get_failed_services():
         if '.service' in l:
             try:
                 failed_services.append(l.split(' ')[1])
-            except Exception:
+            except ValueError:
                 pass
     return failed_services           
 
@@ -38,6 +38,6 @@ def get_system_uptime():
             uptime = l.split(' ', 1)[1]
             return uptime
             
-        except Exception:
+        except ValueError:
             pass
     return ''
