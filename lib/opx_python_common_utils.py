@@ -11,14 +11,13 @@ def run_cmd_get_output(cmdline) :
     try:
         p = subprocess.Popen(cmdline,stdout=subprocess.PIPE, shell=True)
 
-        result = p.wait();
+        result = p.wait()
         details = p.stdout.read()
 
         if result != 0:
             exit(1)
 
         return details.split('\n')
-    except :
-        #print( sys.exc_info())
+    except ValueError:
         pass
     return [""]
