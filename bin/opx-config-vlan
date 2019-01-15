@@ -293,14 +293,14 @@ if __name__ == '__main__':
     if obj.args.ports is None or obj.args.ports.lower() == 'none':
         obj.untagged_port_list = []
     else:
-        port_list_struct = port_range_str_to_port_list(obj.args.ports,['e'])
+        port_list_struct = port_range_str_to_port_list(obj.args.ports,['e', 'bond'])
         obj.untagged_port_list = obj.helper_convert_port_struct_to_list(port_list_struct)
 
     # parsing the tagged port list
     if obj.args.tports is None or obj.args.tports.lower() == 'none':
         obj.tagged_port_list = []
     else:
-        port_list_struct = port_range_str_to_port_list(obj.args.tports,['e'])
+        port_list_struct = port_range_str_to_port_list(obj.args.tports,['e', 'bond'])
         obj.tagged_port_list = obj.helper_convert_port_struct_to_list(port_list_struct)
 
 
