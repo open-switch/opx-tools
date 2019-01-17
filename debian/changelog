@@ -1,3 +1,9 @@
+opx-tools (2.0.1+opx2) unstable; urgency=medium
+
+  * Bugfix: slave ports not coming up when LAG is created through opx-config-lag
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Fri, 18 Jan 2019 13:32:35 -0700
+
 opx-tools (2.0.1+opx1) unstable; urgency=medium
 
   * Bugfix: Added bond support to vlan util

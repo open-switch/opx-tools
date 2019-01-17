@@ -95,13 +95,6 @@ class cli(object):
         if cfg_obj is not None:
             self.helper_exit('LAG already exists')
 
-        # Assign mac-learn-mode
-        if self.args.learn_mode:
-            args_dict[attr_lag_learn_mode] = lag_learn_mode_reverse_map[self.args.learn_mode]
-
-        # Enable/Disable the LAG
-        args_dict[attr_intf_enable_state] = self.admin_status_flag
-
         self.cps_cb('create', args_dict)
 
 
@@ -116,14 +109,6 @@ class cli(object):
         self.set_member_ports(sorted(member_ports),'set')
 
 
-        # Assign unblocked ports
-        if len(self.unblocked_port_list) != 0:
-            self.cps_cb('set', 
-                        {attr_intf_name:self.args.name, 
-                         attr_lag_unblocked_ports:sorted(self.unblocked_port_list)
-                        }
-                        )
-
         # Assign blocked ports
         if len(self.blocked_port_list) != 0:
             self.cps_cb('set', 
@@ -131,6 +116,15 @@ class cli(object):
                          attr_lag_blocked_ports:sorted(self.blocked_port_list)
                         }
                        )
+
+        # Assign mac-learn-mode
+        if self.args.learn_mode:
+            args_dict[attr_lag_learn_mode] = lag_learn_mode_reverse_map[self.args.learn_mode]
+
+        # Enable/Disable the LAG
+        args_dict[attr_intf_enable_state] = self.admin_status_flag
+
+        self.cps_cb('set', args_dict)
 
 
     def delete(self):
