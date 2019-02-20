@@ -16,10 +16,13 @@
 import sys
 import argparse
 import cps_utils
+import cps
+import cps_object
 import socket
 import nas_ut_framework as nas_ut
 import nas_route_utils as nas_route
 import netaddr as net
+import bytearray_utils as ba_utils
 import time
 from netaddr import *
 '''
@@ -32,11 +35,7 @@ IPV4_PREFIX_LEN = 24
 IPV6_PREFIX_LEN = 64
 
 def build_route_obj(vrf, route_prefix, prefix_len, version):
-    print "version is:", version #ipv4/ipv6
-
     obj = cps_utils.CPSObject(nas_route.get_route_key()[int(0)])
-    print nas_route.get_route_key()[int(0)]
-
     obj.add_attr("base-route/obj/vrf-name", vrf)
     if version == 'ipv4':
         obj.add_attr("af", socket.AF_INET)
@@ -51,6 +50,27 @@ def build_route_obj(vrf, route_prefix, prefix_len, version):
 
     return obj
 
+
+def build_ip_obj(ip_addr, prefix_len, version, vrf, ifname):
+    if version == "ipv4":
+        data_dict={'base-ip/ipv4/vrf-name':vrf,'base-ip/ipv4/address/prefix-length':prefix_len,'base-ip/ipv4/name':ifname, 'base-ip/ipv4/address/ip':ip_addr}
+        cps_utils.add_attr_type('base-ip/ipv4/address/ip',"ipv4")
+        cps_obj=cps_utils.CPSObject('base-ip/ipv4/address',data=data_dict)
+        return cps_obj
+
+def check_vrf_exists(given_vrf):
+    obj=cps_object.CPSObject('ni/network-instances')
+    l=[]
+    vrf_list=[]
+    cps.get([obj.get()],l)
+    for i in l:
+        vrf=i['data']['ni/network-instances/network-instance/name']
+        vrf=ba_utils.ba_to_str(vrf,len(vrf))
+        vrf_list.append(vrf)
+    if given_vrf not in vrf_list:
+        print "%s VRF does not exist"%given_vrf
+        return False
+    return True
 
 def add_embd_param(obj, outer_param, inner_param, val_list, type=''):
     count = int(0)
@@ -70,60 +90,123 @@ def add_embd_param(obj, outer_param, inner_param, val_list, type=''):
 
 
 def nas_route_op(op, obj, ver):
-    nas_route.init(ver)
-    nas_ut.get_cb_method(op)(obj)
-
+    l=[]
+    tr_obj = {'change': obj.get(), 'operation':op}
+    l.append(tr_obj)
+    ret=cps.transaction(l)
+    if ret:
+        print "Success"
+    else:
+        print "Failed to",op
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Configure static route', formatter_class=argparse.RawTextHelpFormatter)
-    parser.epilog="Example:\n(1)opx-config-route create --vrf_name default --dst 192.168.10.2/24 --nh '127.0.0.1 127.0.0.2' \
-                            \n(2)opx-config-route delete --vrf_name default --dst 192.168.10.2\n"	
+    parser.epilog="Example:\n(1)Create new route: opx-config-route create --vrf_name default --dst 100.1.1.0/24 --nh_addr '10.1.1.1 10.1.1.2' \
+                            \n(2)Delete route: opx-config-route delete --vrf_name default --dst 100.1.1.0/24 \
+                            \n(3)Configure ip to an interface in default vrf: opx-config-route create --ip_addr '10.1.1.3/24' --ifname 'e101-003-0' \
+                            \n(4)Enable VRf route leaking: opx-config-route create --vrf_name blue --dst 11.1.1.0/24 --nh_vrf_name 'red' --ifname v-e101-001-0 \
+                            \n(5)Remove the VRf route leaked: opx-config-route delete --vrf_name blue --dst 11.1.1.0/24 --nh_vrf_name 'red'"
+
     parser.add_argument("command", choices=['create','delete','set'])
     parser.add_argument("--vrf_name", help="existing VRF name", default='default')
-    parser.add_argument("--nh", help="next hop ip addresses(seperated by space)", default='')
-    parser.add_argument("--dst", help="destination address", default='')
+    parser.add_argument("--ip_addr", help="configure ipv4 or ipv6 ip address to an interface")
+    parser.add_argument("--dst", help="destination route address", default='')
+    parser.add_argument("--nh_addr", help="next hop ip addresses (separated by space)")
+    parser.add_argument("--ifname", help="interface name")
+    parser.add_argument("--nh_ifindex", help="next hop interface name (separated by space)")
+    parser.add_argument("--nh_vrf_name", help="VRF route leaking")
     args = vars(parser.parse_args())
-    print "args:", args
     op = args['command']
-    ip_addr = args['dst']
+    dst_addr = args['dst']
+    ip_addr=args['ip_addr']
     vrf = args['vrf_name'] 
-    nh_ip_addr = args['nh']
-    nh_ip_list = str.split(nh_ip_addr)
+    nh_addr = args['nh_addr']
+    if nh_addr:
+        nh_ip_list = str.split(nh_addr)
+    ifname=args['ifname']
     num_of_routes = 1
-    if ip_addr != '':
-        version, prefix_len, route_prefix = nas_route.extract_ip_netmask(ip_addr)
+    if dst_addr:
+        version, prefix_len, route_prefix = nas_route.extract_ip_netmask(dst_addr)
         version = 'ipv' + str(version)
+    if ip_addr:
+        if not ifname:
+            print "specify --ifname"
+            sys.exit()
+        ip=IPNetwork(ip_addr)
+        version, prefix_len, ip_addr = ip.version, ip.prefixlen, ip.ip
+        print "version, prefix_len, ip_addr",version, prefix_len, ip_addr
+        version = 'ipv' + str(version)
+    if version == "ipv6":
+        print "currently ipv6 configuration not supported by this command"
+        sys.exit()
+    #Check VRF exists
+    if not check_vrf_exists(vrf):
+        sys.exit()
 
-    if op == 'create' and ip_addr != '' and nh_ip_addr != '':
+    #Configure ip to an given interface
+    if op == 'create' and ip_addr and ifname:
+        print "Configuring ip address to an interface"
+        obj=build_ip_obj(str(ip.ip), prefix_len, version, vrf, ifname)
+        op = 'create'
+        nas_route_op (op, obj,version)
+
+    #Delete IP address from the given interface 
+    if op == 'delete' and ifname and ip_addr:
+        print "Deleting ip address from the given interface:",ip_addr 
+        obj=build_ip_obj(str(ip.ip), prefix_len, version, vrf, ifname)
+        op = 'delete'
+        nas_route_op (op, obj,version)
+
+    #Create static route
+    if op == 'create' and dst_addr != '':
         start = time.time()
+        if not nh_addr and not ifname:
+            print "specify --nh_addr or --ifname"
+            sys.exit()
         for i in range(0,int(num_of_routes)):
             cps_obj = build_route_obj(vrf, route_prefix, prefix_len, version)
-            add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
-            cps_obj.add_attr("nh-count", len(nh_ip_list))
+            if nh_addr:
+                add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
+                cps_obj.add_attr("nh-count",len(nh_ip_list))
+            if ifname:
+                el = ["nh-list","0","ifname"]
+                cps_obj.add_embed_attr(el,ifname)
+                cps_obj.add_attr("nh-count", 1) 
+            if args['nh_vrf_name']:
+                if not ifname:
+                    print "specify --ifname"
+                    sys.exit()
+                if not check_vrf_exists(args['nh_vrf_name']):
+                    sys.exit()
+                print "Enable VRF leaking between %s and %s"%(vrf,args['nh_vrf_name'])
+                cps_obj.add_attr("nh-vrf-name", args['nh_vrf_name'])
             nas_route_op("create", cps_obj, version)
-            if (version == 'ipv6'):
-                route_prefix += 2**(128-prefix_len)
-            else:
-                route_prefix += 2**(32-prefix_len)
         end = time.time()
         print 'Total time for adding %d routes = %f seconds' % (int (num_of_routes),(end - start))
 
-    elif op == 'set'and ip_addr != '' and nh_ip_addr != '':
+    elif op == 'set'and dst_addr != '' and nh_addr != '':
         cps_obj = build_route_obj(vrf,route_prefix, prefix_len, version)
         add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
         cps_obj.add_attr("nh-count", len(nh_ip_list))
         nas_route_op("set", cps_obj, version)
 
-    elif op == 'delete'and ip_addr != '':
+    #Delete route
+    elif op == 'delete' and dst_addr != '':
         start = time.time()
         for i in range(0,int(num_of_routes)):
             cps_obj = build_route_obj(vrf, route_prefix, prefix_len, version)
-            add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
-            cps_obj.add_attr("nh-count", len(nh_ip_list))
+            if args['nh_vrf_name']:
+                if not check_vrf_exists(args['nh_vrf_name']):
+                    sys.exit()
+                print "Deleting VRF static route leak"
+                cps_obj.add_attr("nh-vrf-name", args['nh_vrf_name'])
+            if args["ifname"]:
+                el = ["nh-list","0","ifname"]
+                cps_obj.add_embed_attr(el,ifname)
+                cps_obj.add_attr("nh-count", 1) 
+            if nh_addr:
+                add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)
+                cps_obj.add_attr("nh-count", len(nh_ip_list))
             nas_route_op("delete", cps_obj, version)
-            if (version == 'ipv6'):
-                route_prefix += 2**(128-prefix_len)
-            else:
-                route_prefix += 2**(32-prefix_len)
         end = time.time()
         print 'Total time for deleting %d routes = %f seconds' % (int (num_of_routes),(end - start))

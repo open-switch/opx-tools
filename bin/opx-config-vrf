@@ -26,6 +26,7 @@ import os
 from cps_utils import *
 import sys
 import nas_os_utils
+import bytearray_utils as ba_utils
 
 intf_rpc_key_id = 'vrf-mgmt/intf-bind-ni/input'
 intf_rpc_key_attr = 'vrf-mgmt/intf-bind-ni/input/interface'
@@ -40,6 +41,38 @@ intf_rpc_op_type_map = {'create': 1, 'delete': 2, 'set': 3, 'unset':4}
 mgmt_rpc_op_type_map = {'set':'create','unset':'delete'}
 
 
+def verify_ports_already_in_non_default_vrf(given_ports_list, vrf_name):
+    accept_ports_list=[]
+    for parent_interface in given_ports_list:
+        l=[]; 
+        obj=cps_object.CPSObject(module=intf_mgmt_key_id, data={intf_name_mgmt_attr_id:parent_interface}) 
+        cps.get([obj.get()],l)
+        vrf = l[0]['data']['ni/if/interfaces/interface/bind-ni-name']
+        vrf = ba_utils.ba_to_str(vrf, len(vrf)) 
+        if vrf == "default":    #not part of any non-default VRF
+            accept_ports_list.append(parent_interface)
+        elif vrf != "default":
+            print "%s already part of VRF %s"%(parent_interface,l[0]['data']['ni/if/interfaces/interface/bind-ni-name'])
+    return accept_ports_list
+
+def get_vrf_list():
+    obj=cps_object.CPSObject('ni/network-instances')
+    l=[]
+    vrf_list=[]
+    cps.get([obj.get()],l)
+    for i in l:
+        vrf=i['data']['ni/network-instances/network-instance/name']
+        vrf_list.append(vrf)
+    vrf_list = [ ba_utils.ba_to_str(i, len(i)) for i in vrf_list ]
+    print "Existing VRFs:", ','.join(vrf_list)
+    return vrf_list
+
+def verify_vrf_already_exists(vrf):
+    vrf_list = get_vrf_list()
+    if vrf in vrf_list:
+        return True  #given vrf already exists
+    else:
+        return False
 
 def nas_vrf_op(op, data_dict):
     obj_list = []
@@ -113,11 +146,8 @@ def commit(op, obj):
     return ret
 
 def _port_name_list(ports):
-    l = []
-    port_list = str.split(ports, ",")
-    for port in port_list:
-        l.append((port.strip()))
-    return l
+    port_list=ports.replace(' ','').split(',')
+    return port_list
 
 def _port_obj_list(attr,data_dict):
     nas_obj_list = []
@@ -132,43 +162,64 @@ def _port_obj_list(attr,data_dict):
 # Calling the main method
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='configure static route')
+    parser = argparse.ArgumentParser(description='config vrf',formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("op", help="operation to perform", choices=['create','delete','add','remove'], default='help')
     parser.add_argument("--name", help="VRF name", default='')
-    parser.add_argument("--ports", help="ports", default='')
-    parser.add_argument("--show", help="List names of existing VRFs", action='store_true',  default=False)
-    args = vars(parser.parse_args())
-    print "args",args
-    #main(args)
+    parser.add_argument("--ports", help="ports", default='') 
+    parser.epilog="Example:\n(1)Create VRF: opx-config-vrf create --name red --ports 'e101-001-0, e101-002-0' \
+                            \n(2)Add ports to VRF: opx-config-vrf add --name red --ports 'e101-003-0,e101-004-0' \
+                            \n(3)Remove ports from VRF: opx-config-vrf remove --name red --ports 'e101-001-0, e101-002-0'\
+                            \n(4)Delete VRF: opx-config-vrf delete --name red  (Make sure to remove ports from VRF before deleting it)\
+                             \nNote:A layer 3 interface cannot belong to more than one VRF at any time\n"
 
+    args = vars(parser.parse_args())
     choice = args['op']
-    print "choice is", choice
     ports = args['ports']
-    print "ports is", ports
     vrf_name = args['name']
-    print "vrf", vrf_name
+
+    vrf_check_status = verify_vrf_already_exists(vrf_name)
 
     if choice == 'create' and vrf_name != '':
-	print "creating vrf"
+        if vrf_check_status: 
+            print "Given VRF already exists"
+            sys.exit()
+        print "Creating VRF", vrf_name
         ifname_list = []
         if ports != '':
             ifname_list = _port_name_list(ports)
+            #Check if given ports already part of some other non-default VRF
+            ifname_list=verify_ports_already_in_non_default_vrf(ifname_list, vrf_name)
         if vrf_name == 'management':
             nas_vrf_op("create", {name_attr_id: vrf_name, vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list,intf_attr_id:[]})
         else:
             nas_vrf_op("create", {name_attr_id: vrf_name, vrf_name_port_id:vrf_name ,intf_attr_id: ifname_list, vrf_intf_operation_type: 1 })
 
     elif choice == 'delete' and vrf_name != '':
+        if not vrf_check_status: 
+            print "Given VRF does not exist"
+            sys.exit()
         nas_vrf_op("delete", {name_attr_id: vrf_name})
 
     elif choice == 'add' and vrf_name != '' and ports != '':
+        if not vrf_check_status: 
+            print "Given VRF does not exist"
+            sys.exit()
         ifname_list = _port_name_list(ports)
+        #Get list of ports not in given VRF from the given list of ports
+        ifname_list=verify_ports_already_in_non_default_vrf(ifname_list, vrf_name)
+        if ifname_list == []:
+            print "Nothing to add"
+            sys.exit()
+        print "Adding ports:", ",".join(ifname_list)
         if vrf_name == 'management':
             nas_vrf_op("set", {vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list})
         else:
             nas_vrf_op("set", {vrf_name_port_id: vrf_name, intf_attr_id: ifname_list, vrf_intf_operation_type: 1, vrf_name_mgmt_id:[], intf_mgmt_attr_id:[]})
 
     elif choice == 'remove' and vrf_name != '' and ports != '':
+        if not vrf_check_status: 
+            print "Given VRF does not exist"
+            sys.exit()
         ifname_list = _port_name_list(ports)
         if vrf_name == 'management':
             nas_vrf_op("unset", {vrf_name_mgmt_id: vrf_name, intf_mgmt_attr_id: ifname_list})

@@ -24,24 +24,6 @@ import argparse
 from opx_tools.opx_config_utils import *
 
 
-def vrf_view_routes(vrf):
-    result=[]
-    l=[]
-    obj=cps_object.CPSObject('base-route/obj/entry', data={'base-route/obj/vrf-name':vrf})
-    cps.get([obj.get()],l)
-    for i in l:
-        dst_address=get_ip_addr_str(str(i['data']['base-route/obj/entry/route-prefix']))
-        try:
-            nh_addr=get_ip_addr_str(str(i['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/nh-addr']))
-        except:
-            nh_addr="None"
-        try:
-            iface=str(i['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/ifname'])
-        except:
-            iface="None"
-        result += [[dst_address,nh_addr,iface]]
-    return result
-
 def get_ports(vrf):
     obj=cps_object.CPSObject('base-ip/ipv4', data={'base-ip/ipv4/vrf-name':vrf})
     port_list=[]
@@ -51,62 +33,46 @@ def get_ports(vrf):
             port_list.append(str(i['data']['base-ip/ipv4/name']))	
     print "\nVRF:",vrf
     ports=[ ba_utils.ba_to_str(i, len(i)) for i in port_list ]
-    min=0;max=6
-    print "\nPorts:"
-    for i in range(len(ports)/6):
-        l=ports[min:max]
-        print ', '.join(l)
-        min=max
-        max=max+6
+    print "\nPorts:",
+    for i in xrange(0, len(ports), 5):
+        print '\t'+', '.join(str(j) for j in ports[i:i+5])
 
 def get_vrf_names():
-    obj=cps_object.CPSObject('ni/network-instances') #data={name_attr_id: vrf_name})	
+    obj=cps_object.CPSObject('ni/network-instances') 	
     l=[]
     vrf_list=[]
     cps.get([obj.get()],l)
     for i in l:
         vrf=i['data']['ni/network-instances/network-instance/name']
-        vrf_list.append(vrf)
+        vrf_list.append(ba_utils.ba_to_str(vrf,len(vrf)))
     return [ ba_utils.ba_to_str(i, len(i)) for i in vrf_list ]
 
 def get_all_details():    
     vrf_list=get_vrf_names()
-    for vrf in vrf_list:		
-        get_ports(vrf)	
-        result=vrf_view_routes(vrf)
-        print "\nRoutes:"
-        print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
-        print "\n**************************************"
-
-def get_summary():    
-    vrf_list=get_vrf_names()
-    for vrf in vrf_list:		
-            get_ports(vrf)	
+    for vrf in vrf_list:
+        get_vrf_details(vrf)
+        print "\n**********************************************"
 
 def get_vrf_details(vrf):
-    get_ports(vrf)	
-    result=vrf_view_routes(vrf)
-    print_summary(["Dest","Next hop","Interface"],result,[None, None, None,None])
+    get_ports(vrf)
 
-def get_ip_addr_str(data):
-    try:
-        return ba_utils.ba_to_ipv4str('', data)
-    except:
-        return ba_utils.ba_to_ipv6str('', data)
+def verify_vrf_exists(vrf):
+    vrf_list = get_vrf_names()
+    if vrf not in vrf_list:
+	print "Given vrf does not exist"
+	sys.exit()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='configure static route')
+    parser = argparse.ArgumentParser(description='show vrf')
     parser.add_argument("--name", help="view specific VRF details")
     parser.add_argument("--list", help="list VRF names", action='store_true',  default=False)
-    parser.add_argument("--summary", help="summarized VRF detail", action='store_true',  default=False)
-    
+
     args = parser.parse_args()
-    if args.name==None and args.list==False and args.summary==False:
-        get_all_details()		
+    if args.name==None and args.list==False:
+        get_all_details()
     if args.name:
+        verify_vrf_exists(args.name)
         get_vrf_details(args.name)
     if args.list:
         print "VRFs:",str(get_vrf_names()).strip('[]')
-    if args.summary:
-        get_summary()
-            
+
