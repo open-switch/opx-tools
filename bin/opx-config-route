@@ -57,6 +57,11 @@ def build_ip_obj(ip_addr, prefix_len, version, vrf, ifname):
         cps_utils.add_attr_type('base-ip/ipv4/address/ip',"ipv4")
         cps_obj=cps_utils.CPSObject('base-ip/ipv4/address',data=data_dict)
         return cps_obj
+    elif version == "ipv6":
+        data_dict={'base-ip/ipv6/vrf-name':vrf,'base-ip/ipv6/address/prefix-length':prefix_len,'base-ip/ipv6/name':ifname, 'base-ip/ipv6/address/ip':ip_addr}
+        cps_utils.add_attr_type('base-ip/ipv6/address/ip',"ipv6")
+        cps_obj=cps_utils.CPSObject('base-ip/ipv6/address',data=data_dict)
+        return cps_obj
 
 def check_vrf_exists(given_vrf):
     obj=cps_object.CPSObject('ni/network-instances')
@@ -136,9 +141,6 @@ if __name__ == "__main__":
         version, prefix_len, ip_addr = ip.version, ip.prefixlen, ip.ip
         print "version, prefix_len, ip_addr",version, prefix_len, ip_addr
         version = 'ipv' + str(version)
-    if version == "ipv6":
-        print "currently ipv6 configuration not supported by this command"
-        sys.exit()
     #Check VRF exists
     if not check_vrf_exists(vrf):
         sys.exit()

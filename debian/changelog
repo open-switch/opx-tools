@@ -1,3 +1,9 @@
+opx-tools (2.0.1+opx3) unstable; urgency=medium
+
+  * Update: Add ipv6 address configuration support in opx-config-route
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Wed, 13 March 2019 10:32:35 -0700
+
 opx-tools (2.0.1+opx2) unstable; urgency=medium
 
   * Bugfix: slave ports not coming up when LAG is created through opx-config-lag
