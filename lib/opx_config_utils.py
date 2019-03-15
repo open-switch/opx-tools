@@ -80,12 +80,14 @@ def port_name_to_type(nm):
     if n == 2:
         return 'vlan' if port_name_to_type(li[0]) in ['e', 'bond'] else None
     n = len(nm)
-    if n > 1 and nm[0] == 'e':
-        return 'e'
-    if n > 2 and nm[0:2] == 'br':
-        return 'br'
     if n > 4 and nm[0:4] == 'bond':
         return 'bond'
+    if n > 3 and nm[0:3] == 'eth':
+        return 'mgmt'
+    if n > 2 and nm[0:2] == 'br':
+        return 'br'
+    if n > 1 and nm[0] == 'e':
+        return 'e'
     return None
 
 

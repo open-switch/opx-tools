@@ -1,3 +1,9 @@
+opx-tools (2.0.1) unstable; urgency=medium
+
+  * fix: Recognize management ports as a distinct port type
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Mon, 18 Mar 2019 16:30:00 -0800
+
 opx-tools (2.0.0) unstable; urgency=medium
 
   * Feature: OPX config/show utilities
