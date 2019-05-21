@@ -43,25 +43,21 @@ def build_route_obj(vrf, route_prefix, prefix_len, version):
         obj.add_attr("af", socket.AF_INET6)
     else:
         print "wrong ip format entered"
-
     obj.add_attr_type("route-prefix", version)
     obj.add_attr("route-prefix", str(route_prefix))
     obj.add_attr("prefix-len", int(prefix_len))
-
     return obj
-
 
 def build_ip_obj(ip_addr, prefix_len, version, vrf, ifname):
     if version == "ipv4":
         data_dict={'base-ip/ipv4/vrf-name':vrf,'base-ip/ipv4/address/prefix-length':prefix_len,'base-ip/ipv4/name':ifname, 'base-ip/ipv4/address/ip':ip_addr}
         cps_utils.add_attr_type('base-ip/ipv4/address/ip',"ipv4")
         cps_obj=cps_utils.CPSObject('base-ip/ipv4/address',data=data_dict)
-        return cps_obj
     elif version == "ipv6":
         data_dict={'base-ip/ipv6/vrf-name':vrf,'base-ip/ipv6/address/prefix-length':prefix_len,'base-ip/ipv6/name':ifname, 'base-ip/ipv6/address/ip':ip_addr}
         cps_utils.add_attr_type('base-ip/ipv6/address/ip',"ipv6")
         cps_obj=cps_utils.CPSObject('base-ip/ipv6/address',data=data_dict)
-        return cps_obj
+    return cps_obj
 
 def check_vrf_exists(given_vrf):
     obj=cps_object.CPSObject('ni/network-instances')
@@ -92,7 +88,6 @@ def add_embd_param(obj, outer_param, inner_param, val_list, type=''):
         obj.add_embed_attr(el, val)
         count = count + 1
         del el[1:]
-
 
 def nas_route_op(op, obj, ver):
     l=[]
@@ -152,7 +147,7 @@ if __name__ == "__main__":
         op = 'create'
         nas_route_op (op, obj,version)
 
-    #Delete IP address from the given interface 
+    #Delete IP address from the given interface
     if op == 'delete' and ifname and ip_addr:
         print "Deleting ip address from the given interface:",ip_addr 
         obj=build_ip_obj(str(ip.ip), prefix_len, version, vrf, ifname)
@@ -186,6 +181,7 @@ if __name__ == "__main__":
         end = time.time()
         print 'Total time for adding %d routes = %f seconds' % (int (num_of_routes),(end - start))
 
+    #Update route
     elif op == 'set'and dst_addr != '' and nh_addr != '':
         cps_obj = build_route_obj(vrf,route_prefix, prefix_len, version)
         add_embd_param(cps_obj, "nh-list", "nh-addr", nh_ip_list, version)

@@ -33,17 +33,23 @@ def vrf_view_routes(vrf):
     obj=cps_object.CPSObject('base-route/obj/entry', data={'base-route/obj/vrf-name':vrf})
     cps.get([obj.get()],l)
     for i in l:
-        dst_address=get_ip_addr_str(str(i['data']['base-route/obj/entry/route-prefix']))
+        data=i['data']
+        nh_list=[]
+        nh_list_key='base-route/obj/entry/nh-list'
+        dst_address=get_ip_addr_str(str(data['base-route/obj/entry/route-prefix']))
+        prefix_len=ba_utils.from_ba(data['base-route/obj/entry/prefix-len'], 'uint8_t')
+        dst_address=dst_address+"/"+str(prefix_len)
         try:
-            nh_addr=get_ip_addr_str(str(i['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/nh-addr']))
-            nh_vrf_name=(str(i['data']['base-route/obj/entry/nh-vrf-name']))
+            for key in data[nh_list_key]:
+                nh_addr=(get_ip_addr_str(str(data[nh_list_key][key]['base-route/obj/entry/nh-list/nh-addr'])))+' '
+                iface=(str(data[nh_list_key][key]['base-route/obj/entry/nh-list/ifname']))
+                nh_vrf_name=(str(data['base-route/obj/entry/nh-vrf-name']))
+                nh_list.append(nh_addr+" dev "+iface)
         except:
-            nh_addr=None; nh_vrf_name=None
-        try:
-            iface=str(i['data']['base-route/obj/entry/nh-list']['0']['base-route/obj/entry/nh-list/ifname'])
-        except:
-            iface="None"
-        result += [[dst_address,nh_addr,iface,nh_vrf_name,nh_vrf_name]]
+            nh_addr='None'; nh_vrf_name=None;iface='None'
+            nh_list.append(nh_addr+" dev "+iface)
+        for nh_str in nh_list:
+            result += [[dst_address,nh_str,nh_vrf_name]]
     return result
 
 def get_vrf_names():
@@ -70,8 +76,8 @@ def get_all_routes():
         get_vrf_routes(vrf)
 
 def get_vrf_routes(vrf):
-    result= vrf_view_routes(vrf) 
-    print_summary(["Dest","Next hop","Interface","Next hop VRF"],result,[None, None, None,None])
+    result= vrf_view_routes(vrf)
+    print_summary(["Dest","Next hop","Next hop VRF"],result,[None, None, None,None])
 
 
 if __name__ == "__main__":
@@ -80,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument("--vrf_name", help="view specific VRF routes")
     args = parser.parse_args()
     vrf=args.vrf_name
-    if vrf == None:	
+    if vrf == None:
         get_all_routes()
     else:
         get_vrf_routes(vrf)
