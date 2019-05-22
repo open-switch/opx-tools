@@ -1,0 +1,261 @@
+#!/usr/bin/python
+
+# Copyright (c) 2019 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+import argparse
+import sys
+from argparse import RawDescriptionHelpFormatter
+import cps
+import cps_utils
+import cps_object
+import nas_qos
+
+from opx_tools.opx_config_utils import *
+
+key_map = {'dscp-to-tc':['dscp','tc'],
+           'dscp-to-color':['dscp','color'],
+           'dot1p-to-tc':['dot1p','tc'],
+           'dot1p-to-color':['dot1p','color'],
+           'tc-to-queue':['tc','qtype','qname']}
+color_map = {1:'GREEN',2:'YELLOW',3:'RED'}
+
+help_str='''This command supports these sub-commands:
+    create  Create a QOS map
+    delete  Delete a QOS map
+    update  Update the mapped value of a key, for an existing map
+    add     Add additional mapping values (key-value pair) to an existing map 
+    remove  Remove mapping values(key-value pair) from an existing map
+
+'''
+
+class cli(object):
+
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(prog='opx-config-qos-map',
+                                              formatter_class=RawDescriptionHelpFormatter,
+                                              description=help_str)
+        # Mandatory arguments
+        self.parser.add_argument('command', choices=['create','delete','update','add','remove'])
+
+        # Optional arguments
+        self.parser.add_argument('--id', dest='id', help='Map ID', action='store', type=int)
+        self.parser.add_argument('--name', dest='name', help='Map name', action='store', type=str)
+        self.parser.add_argument('--type', dest='type', help='Map type.', required=True, type=str,
+                                choices=['dscp-to-tc','dot1p-to-color','dot1p-to-tc','dscp-to-color',
+				'tc-to-queue','tc-to-priority-group','tc-to-dscp','pfc-prio-to-queue'])
+        self.parser.add_argument('--dot1p', dest='dot1p', help='802.1p header value', action='store', type=str)
+        self.parser.add_argument('--dscp', dest='dscp', help='DSCP header value', action='store', type=str)
+        self.parser.add_argument('--tc', dest='tc', help='Traffic Class(0-7)', action='store', type=str)
+        self.parser.add_argument('--color', dest='color', help='color code(1=green, 2=yellow, 3=red)', action='store', type=int)
+        self.parser.add_argument('--pg', dest='pg', help='priority-group ID', action='store', type=str)
+        self.parser.add_argument('--qname', dest='qname', help='Queue name', action='store', type=str)
+        self.parser.add_argument('--qtype', dest='qtype', help='Queue type', action='store', type=str)
+
+
+    def create(self):
+        # Constructing the map type
+        attr_map_type = self.args.type + "-map"
+
+        # Constructing the map name
+        attr_map_name = self.args.name
+
+        # Constructing the map entries
+        key_list = key_map[self.args.type]
+        self.if_args_valid(key_list)
+
+        entries = []
+        if len(key_list) == 2:
+            #e = (getattr(self.args, key_list[0]), getattr(self.args, key_list[1]))
+            e = (self.getattrval(key_list[0]), self.getattrval(key_list[1]))
+            entries.append(e)
+        elif len(key_list) == 3:
+            e = (getattr(self.args, key_list[0]), getattr(self.args, key_list[1]), getattr(self.args, key_list[2]))
+            entries.append(e)
+
+        #entries = [(1,'GREEN'),(3,'RED')]
+        print entries
+
+        # Create a map object
+        map_obj = nas_qos.MapCPSObjs(attr_map_type, entry_list=entries, map_name=attr_map_name)
+
+        # Write the map data to CPS
+        if map_obj.commit() == False:
+            self.helper_exit("Failed to create map")
+
+
+    def delete(self):
+        args_dict = {}
+
+        if (self.args.id == None):
+            self.helper_exit("error: argument --id is required")
+
+        # Constructing the map attributes
+        attr_map_type  = "base-qos/" + self.args.type + "-map"
+        attr_map_id    = attr_map_type + "/id"
+        attr_map_entry = attr_map_type + "/entry"
+        args_dict[attr_map_id] = self.args.id
+
+        # Fetching the map data from CPS
+        obj = cps_get('target', attr_map_type, args_dict)
+        if obj is None:
+            self.helper_exit('QOS Map does not exist')
+
+        # Delete the map entries
+        robj = cps_object.CPSObject(obj = obj[0])
+
+        try:
+            entry_list = robj.get_attr_data('entry')
+            if entry_list is not None:
+                for e in entry_list:
+                    entry = entry_list[e]
+                    entry_dict = {}
+                    for key in entry.items():
+                        entry_dict[attr_map_id]               = self.args.id
+                        entry_dict[attr_map_entry+'/'+key[0]] = key[1]
+                    self.cps_cb('delete', attr_map_entry, entry_dict)
+        except:
+            pass
+
+        # Delete the map
+        self.cps_cb('delete', attr_map_type, args_dict)
+
+
+    def update(self):
+        args_dict = {}
+
+        if (self.args.id == None):
+            self.helper_exit("error: argument --id is required")
+
+        # Create MAP construct according to the type
+        attr_map_type   = "base-qos/" + self.args.type + "-map"
+        attr_map_id     = attr_map_type + "/id"
+        attr_map_entry  = attr_map_type + "/entry"
+        args_dict[attr_map_id] = self.args.id
+
+        # Fetching the existing attributes of the QOS
+        obj = cps_get('target', attr_map_type, args_dict)
+        if obj is None:
+            self.helper_exit('QOS Map does not exist')
+
+        # Constructing the map entries
+        key_list = key_map[self.args.type]
+        self.if_args_valid(key_list)
+        for attr in key_list:
+            args_dict[attr_map_entry+'/'+attr] = getattr(self.args, attr)
+
+        # Updating the map entry into the CPS
+        self.cps_cb('set', attr_map_entry, args_dict)
+
+
+    def add(self):
+        args_dict = {}
+
+        if (self.args.id == None):
+            self.helper_exit("error: argument --id is required")
+
+        # Create MAP construct according to the type
+        attr_map_type   = "base-qos/" + self.args.type + "-map"
+        attr_map_id     = attr_map_type + "/id"
+        attr_map_entry  = attr_map_type + "/entry"
+
+        args_dict[attr_map_type+'/id'] = self.args.id
+
+        # Fetching the map data from CPS
+        obj = cps_get('target', attr_map_type, args_dict)
+        if obj is None:
+            self.helper_exit('QOS Map does not exist')
+
+        # Constructing the map entries
+        key_list = key_map[self.args.type]
+        self.if_args_valid(key_list)
+        for attr in key_list:
+            args_dict[attr_map_entry+'/'+attr] = getattr(self.args, attr)
+
+        # Creating the map entry into the CPS
+        self.cps_cb('create', attr_map_entry, args_dict)
+
+
+    def remove(self):
+        args_dict = {}
+
+        if (self.args.id == None):
+            self.helper_exit("error: argument --id is required")
+
+        # Create MAP construct according to the type
+        attr_map_type   = "base-qos/" + self.args.type + "-map"
+        attr_map_id     = attr_map_type + "/id"
+        attr_map_entry  = attr_map_type + "/entry"
+        args_dict[attr_map_id] = self.args.id
+
+        # Fetching the map data from CPS
+        obj = cps_get('target', attr_map_type, args_dict)
+        if obj is None:
+            self.helper_exit('QOS Map does not exist')
+
+        # Constructing the map entries
+        key_list = key_map[self.args.type]
+        self.if_args_valid(key_list)
+        for attr in key_list:
+             args_dict[attr_map_entry+'/'+attr] = getattr(self.args, attr)
+
+        # Deleting the map entry from the CPS
+        self.cps_cb('delete', attr_map_entry, args_dict)
+
+
+    def if_args_valid(self, args_list):
+        if ((('dscp' in args_list) ^ (self.args.dscp is not None)) or
+            (('dot1p' in args_list) ^ (self.args.dot1p is not None)) or
+            (('tc' in args_list) ^ (self.args.tc is not None)) or
+            (('color' in args_list) ^ (self.args.color is not None)) or
+            (('qtype' in args_list) ^ (self.args.qtype is not None)) or
+            (('qname' in args_list) ^ (self.args.qname is not None))):
+            self.helper_exit("error: missing or extra attributes not matching the map type")
+
+
+
+    def commit(self, obj, op):
+        obj_list = []
+        trans_args_dict = {'change':obj.get(), 'operation':op}
+        obj_list.append(trans_args_dict)
+        rc = cps.transaction(obj_list)
+        return rc
+
+
+    def cps_cb(self, op, key, args_dict):
+        obj = cps_object.CPSObject(module=key, data=args_dict)
+        rc = self.commit(obj, op)
+        if not rc:
+            self.helper_exit('Unexpected error')
+
+
+    def helper_exit(self, Error):
+        self.parser.print_help()
+        print "opx-config-qos-map: %s" % Error
+        exit(1)
+
+    def getattrval(self, key):
+        val = getattr(self.args, key)
+        if key == 'color':
+            if val > 3 or val < 1:
+                self.helper_exit('color only supports values 1-3')
+            val = color_map[val]
+        return val
+
+if __name__ == '__main__':
+    obj = cli()
+
+    # Parsing the command
+    obj.args = obj.parser.parse_args()
+
+    getattr(obj, obj.args.command)()
