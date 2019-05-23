@@ -6,3 +6,6 @@ pkgpythondir = $(pythondir)/opx_tools
 pkgpython_DATA = $(wildcard lib/*)
 
 man1_MANS = $(wildcard man/*)
+
+systemdconfdir= /lib/systemd/system
+systemdconf_DATA = cfg/init/*.service

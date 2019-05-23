@@ -1,0 +1,15 @@
+
+[Unit]
+Description=OPX Auto Config Service
+After=opx-qos-init.service opx-acl-init.service opx-create-interface.service opx-vrf.service
+Requires=opx-qos-init.service opx-acl-init.service opx-create-interface.service opx-vrf.service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/opx/opx-environment
+ExecStart=/usr/bin/python /usr/bin/opx-autoconf.py
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
