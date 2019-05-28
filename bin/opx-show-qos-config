@@ -1,0 +1,165 @@
+#!/usr/bin/python
+# Copyright (c) 2019 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+# LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+import argparse
+import sys
+from argparse import RawDescriptionHelpFormatter
+import cps
+import cps_utils
+import cps_object
+
+from opx_tools.opx_config_utils import *
+
+key_map = {'dscp-to-tc':['dscp','tc'],
+           'dscp-to-color':['dscp','color'],
+           'dot1p-to-tc':['dot1p','tc'],
+           'dot1p-to-color':['dot1p','color'],
+           'tc-to-queue':['tc','qtype','qname']}
+
+color_map = {1:'GREEN',2:'YELLOW',3:'RED'}
+
+help_str='''This command displays one of the following:
+    - QoS configuration of a single QOS-map reffered by the given ID or 'all' the avaiable QOS Maps.
+    - QoS configuration of port ingress/egress.
+
+'''
+
+class cli(object):
+
+    seen_list = []
+
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(prog='opx-show-qos',
+                                      formatter_class=RawDescriptionHelpFormatter,
+                                      description=help_str)
+        option=self.parser.add_mutually_exclusive_group()
+        option.add_argument('--map-id', dest='map_id', action='store', help='QOS ID', type=str)
+        option.add_argument('--ports', dest='ports', action='store', help='QOS Name', type=str)
+
+        port_stage=self.parser.add_mutually_exclusive_group()
+        port_stage.add_argument('--egress', action='store_true', help='QOS ID', default=False)
+        port_stage.add_argument('--ingress', action='store_true', help='QOS ID', default=False)
+
+        self.parser.add_argument('--type', dest='type', action='store', help='Map type', type=str,
+                                choices=['dscp-to-color','dscp-to-tc','dot1p-to-color','dot1p-to-tc','tc-to-queue',
+                                        'tc-to-priority-group','tc-to-dscp','pfc-to-priority-group'])
+
+    def print_qos_map(self, obj, attr_dict, type):
+        id=cps_key_attr_data_get(obj, attr_dict['id'])
+
+        map_attr = []
+        for attr in key_map[type]:
+            map_attr.append(attr)
+
+        attrs = [Struct(heading='Map ID',
+                        value=id
+                        ),
+                 Struct(heading='Name',
+                        value=cps_attr_data_get(obj, attr_dict['name'])
+                        ),
+                 Struct(heading='Map',
+                        value=""
+                        )
+                 ]
+
+        if attr_dict['entry'] not in obj['data']:
+            return
+
+        entries=obj['data'][attr_dict['entry']]
+
+        summary = []
+        for item in entries:
+            e = []
+            for k in key_map[type]:
+                attr = attr_dict['entry']+"/"+k
+                val  = entries[item][attr]
+                data = cps_utils.cps_attr_types_map.from_data(attr, val)
+                if k == 'color':
+                    data = color_map[data]
+                e.append(data)
+            summary.append(e)
+
+        if id not in self.seen_list:
+            self.seen_list.append(id)
+            print_section(0, id, attrs)
+            print_summary(map_attr, summary, [None, None], lvl=3)
+
+
+    def show_qos_map_config(self, id, type):
+        # Constructing the map attributes
+        attr_dict = {}
+        attr_dict['type']  = "base-qos/" + type + "-map"
+        attr_dict['id']    = attr_dict['type'] + "/id"
+        attr_dict['name']  = attr_dict['type'] + "/name"
+        attr_dict['entry'] = attr_dict['type'] + "/entry"
+
+        if id == 'all':
+            obj_list = cps_get('target',
+                        attr_dict['type']
+                      )
+            if obj_list is None or len(obj_list) == 0:
+                self.helper_exit("No QOS Map found")
+            else:
+                for item in obj_list:
+                    self.print_qos_map(item, attr_dict, type)
+
+        else:
+            obj = cps_get('target',
+                        attr_dict['type'],
+                        {attr_dict['id']:id}
+                      )
+            if obj is None:
+                self.helper_exit("No QOS Map found")
+            else:
+                self.print_qos_map(obj[0], attr_dict, type)
+
+
+    def show_qos_port_config(self, port_list, egress=False, ingress=False):
+        # TBD
+        self.helper_exit("No QOS information found")
+
+
+    def helper_exit(self, Error):
+        print "opx-show-qos: %s" % Error
+        exit(1)
+
+if __name__ == '__main__':
+    obj = cli()
+
+    # Parsing the command
+    obj.args = obj.parser.parse_args()
+
+    if ((obj.args.ports is None) and (obj.args.egress == True or obj.args.ingress == True)):
+        obj.helper_exit("option 'egress' or 'ingress' follows the option 'ports'")
+
+    if ((obj.args.map_id is None) and (obj.args.type is not None)):
+        obj.helper_exit("option 'type' follows the option 'map-id'")
+
+    if obj.args.map_id is not None:
+        if obj.args.type is None:
+            obj.helper_exit("missing map type")
+        obj.show_qos_map_config(obj.args.map_id, obj.args.type)
+
+    elif obj.args.ports is not None:
+        if obj.args.egress == True:
+            obj.show_qos_port_config(obj.args.ports, egress=True)
+
+        elif obj.args.ingress == True:
+            obj.show_qos_port_config(obj.args.ports, ingress=True)
+
+        else:
+            obj.show_qos_port_config(obj.args.ports, egress=True, ingress=True)
+    else:
+        obj.helper_exit("mission option")

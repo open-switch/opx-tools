@@ -333,7 +333,7 @@ def print_summary_line(r, fs):
 # funcs    - List of functions for mapping values to output, one function
 #            per column
 
-def print_summary(headings, values, outmaps=None, funcs=None):
+def print_summary(headings, values, outmaps=None, funcs=None, lvl=0):
     nf = len(headings)
     a = [nf * [''] for i in range(len(values))]
     fs = map(lambda x: len(x), headings)
@@ -361,9 +361,14 @@ def print_summary(headings, values, outmaps=None, funcs=None):
             i = li.index(fsmax)
             li = li[(i + 1):]
         fs[i] /= 2
+    print_indent(lvl)
     print_summary_line(headings, fs)
+
+    print_indent(lvl)
     print w * '-'
+
     for r in a:
+        print_indent(lvl)
         print_summary_line(r, fs)
 
 
