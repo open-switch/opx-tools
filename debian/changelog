@@ -2,13 +2,13 @@ opx-tools (2.0.1+opx4) unstable; urgency=medium
 
   * Update: opx-show-route to display mulitple next hops
 
- -- Dell EMC <ops-dev@lists.openswitch.net>  Mon, 18 March 2019 16:32:35 -0700
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Mon, 18 Mar 2019 16:32:35 -0700
 
 opx-tools (2.0.1+opx3) unstable; urgency=medium
 
   * Update: Add ipv6 address configuration support in opx-config-route
 
- -- Dell EMC <ops-dev@lists.openswitch.net>  Wed, 13 March 2019 10:32:35 -0700
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Wed, 13 Mar 2019 10:32:35 -0700
 
 opx-tools (2.0.1+opx2) unstable; urgency=medium
 
