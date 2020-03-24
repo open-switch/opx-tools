@@ -124,7 +124,7 @@ class cli(object):
                           attr_vlan_obj,
                           {attr_intf_name:name, attr_intf_type: intf_type}
                          )   
-            if obj is not None:
+            if obj:
                 self.print_vlan(obj[0])
             else:
                 self.helper_exit("No VLAN information found")

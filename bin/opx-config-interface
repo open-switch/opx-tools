@@ -65,5 +65,4 @@ for x in attrs:
 for port in li:
     d['dell-base-if-cmn/if/interfaces/interface/if-index'] = port.idx
     if not cps_set('dell-base-if-cmn/if/interfaces/interface', 'target', d):
-        print 'Failed to set port {}'.format(port) >> sys.stderr
-    
+        print >> sys.stderr, 'Failed to set port {}'.format(port.name)

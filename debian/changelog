@@ -1,3 +1,10 @@
+opx-tools (2.0.2) unstable; urgency=medium
+
+  * Bugfix: opx-show-vlan prints stacktrace  when invalid vlan id is given
+  * Bugfix: Syntax error while printing error message in opx-config-interface
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Fri, 20 Mar 2020 04:40:00 -0700
+
 opx-tools (2.0.1+opx4) unstable; urgency=medium
 
   * Update: opx-show-route to display mulitple next hops
