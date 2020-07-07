@@ -19,52 +19,69 @@ import sys
 
 from opx_tools.opx_config_utils import *
 
-
 resp = cps_get('target', 'base-switch/switching-entities/switching-entity', {})
 if resp is None or len(resp) != 1:
-    print  >> sys.stderr, 'Failed to get switch data'
+    print >> sys.stderr, 'Failed to get switch data'
     sys.exit(1)
 target_attrs = resp[0]['data'].keys()
 
-hash_alg_map = {'xor': 1, 'crc': 2, 'random': 3 }
+hash_alg_map = {'xor': 1, 'crc': 2, 'random': 3}
 
 hash_fields_map = {'src-ip':       1,
                    'dest-ip':      2,
-                   'vlan-id':      3,
-                   'ip-protocol':  4,
-                   'ethertype':    5,
-                   'l4-src-port':  6,
-                   'l4-dest-port': 7,
-                   'src-mac':      8,
-                   'dest-mac':     9,
-                   'in-port':      10
+                   'inner-src-ip': 3,
+                   'inner-dst-ip': 4,
+                   'vlan-id':      5,
+                   'ip-protocol':  6,
+                   'ethertype':    7,
+                   'l4-src-port':  8,
+                   'l4-dest-port': 9,
+                   'src-mac':      10,
+                   'dest-mac':     11,
+                   'in-port':      12
                    }
+
+hash_traffic_type_map = {'ecmp-non-ip':       1,
+                         'lag-non-ip':        2,
+                         'ecmp-ipv4':         3,
+                         'ecmp-ipv4-in-ipv4': 4,
+                         'ecmp-ipv6':         5,
+                         'lag-ipv4':          6,
+                         'lag-ipv4-in-ipv4':  7,
+                         'lag-ipv6':          8
+                        }
+
 
 class Hash_Fields_Action(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(Hash_Fields_Action, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         if not chk_set(values, set(hash_fields_map.keys())):
             parser.error('Invalid hash field(s)')
         setattr(namespace, self.dest, values.split(','))
+
 
 class Default_Vlan_Id_Action(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(Default_Vlan_Id_Action, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         if values < 1 or values > 4095:
             parser.error('Invalid default VLAN id')
         setattr(namespace, self.dest, values)
+
 
 class Mac_Addr_Action(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(Mac_Addr_Action, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         ok = True
         while True:
@@ -85,31 +102,37 @@ class Mac_Addr_Action(argparse.Action):
             parser.error('Invalid MAC address')
         setattr(namespace, self.dest, ''.join(li))
 
+
 class Mac_Age_Timer_Action(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(Mac_Age_Timer_Action, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         if values < 0:
             parser.error('Invalid MAC ageing time')
         setattr(namespace, self.dest, values)
-        
+
+
 class Counter_Refresh_Action(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(Counter_Refresh_Action, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         if values < 0:
             parser.error('Invalid statistics counter refresh interval')
         setattr(namespace, self.dest, values)
-        
+
+
 class Switch_Profile_Action(argparse.Action):
     def __init__(self, option_strings, dest, nargs=None, **kwargs):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(Switch_Profile_Action, self).__init__(option_strings, dest, **kwargs)
+
     def __call__(self, parser, namespace, values, option_string=None):
         x = None
         resp = cps_get('target', 'base-switch/switching-entities/switching-entity', {})
@@ -121,91 +144,138 @@ class Switch_Profile_Action(argparse.Action):
         if values not in x:
             parser.error('Invalid profile')
         setattr(namespace, self.dest, values)
-        
-        
+
+
 attrs = [Struct(option='--switch-mode',
-                map={'cut-through': 1, 'store-and-forward': 2 },
+                map={'cut-through': 1, 'store-and-forward': 2},
                 help='Switch forwarding mode',
-	        cps_attr='base-switch/switching-entities/switching-entity/switch-mode'
+                cps_attr='base-switch/switching-entities/switching-entity/switch-mode'
                 ),
          Struct(option='--lag-hash-alg',
                 map=hash_alg_map,
                 help='LAG hash algorithm',
-	        cps_attr='base-switch/switching-entities/switching-entity/lag-hash-algorithm'
+                cps_attr='base-switch/switching-entities/switching-entity/lag-hash-algorithm'
                 ),
          Struct(option='--lag-hash-seed',
                 help='LAG hash algorithm seed value',
                 metavar='SEED',
                 type=int,
-	        cps_attr='base-switch/switching-entities/switching-entity/lag-hash-seed-value'
-                ),
-         Struct(option='--lag-hash-fields',
-                help='Frame fields for LAG hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
-                metavar='FIELDS',
-                action=Hash_Fields_Action,
-	        cps_attr='base-switch/switching-entities/switching-entity/lag-hash-fields'
+                cps_attr='base-switch/switching-entities/switching-entity/lag-hash-seed-value'
                 ),
          Struct(option='--ecmp-hash-alg',
                 map=hash_alg_map,
                 help='ECMP hash algorithm',
-	        cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-algorithm'
+                cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-algorithm'
                 ),
          Struct(option='--ecmp-hash-seed',
                 help='ECMP hash algorithm seed value',
                 metavar='SEED',
                 type=int,
-	        cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-seed-value'
-                ),
-         Struct(option='--ecmp-hash-fields',
-                help='Frame fields for ECMP hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
-                metavar='FIELDS',
-                action=Hash_Fields_Action,
-	        cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-fields'
+                cps_attr='base-switch/switching-entities/switching-entity/ecmp-hash-seed-value'
                 ),
          Struct(option='--mac-age-time',
                 help='Ageing timeout for MAC addresses',
                 metavar='TIME',
                 type=int,
                 action=Mac_Age_Timer_Action,
-	        cps_attr='base-switch/switching-entities/switching-entity/mac-age-timer'
+                cps_attr='base-switch/switching-entities/switching-entity/mac-age-timer'
                 ),
          Struct(option='--default-vlan-id',
                 help='VLAN id assigned to untagged frames',
                 metavar='VID',
                 type=int,
                 action=Default_Vlan_Id_Action,
-	        cps_attr='base-switch/switching-entities/switching-entity/default-vlan-id'
+                cps_attr='base-switch/switching-entities/switching-entity/default-vlan-id'
                 ),
          Struct(option='--disable-default-vlan',
                 help='',
                 map={'off': 0, 'on': 1},
-	        cps_attr='base-switch/switching-entities/switching-entity/disable-default-vlan'
+                cps_attr='base-switch/switching-entities/switching-entity/disable-default-vlan'
                 ),
          Struct(option='--default-mac-addr',
                 help='Default MAC address',
                 metavar='MACADDR',
                 action=Mac_Addr_Action,
-	        cps_attr='base-switch/switching-entities/switching-entity/default-mac-address'
+                cps_attr='base-switch/switching-entities/switching-entity/default-mac-address'
                 ),
          Struct(option='--counter-refresh',
                 help='Time interval for refreshing statistics counters',
                 metavar='TIME',
                 type=int,
                 action=Counter_Refresh_Action,
-	        cps_attr='base-switch/switching-entities/switching-entity/counter-refresh-interval'
+                cps_attr='base-switch/switching-entities/switching-entity/counter-refresh-interval'
                 ),
          Struct(option='--uft-mode',
                 help='Unified forwarding table mode',
                 map={'default': 1, 'scaled-L2': 2, 'scaled-L3-routes': 3, 'scaled-L3-hosts': 4},
-	        cps_attr='base-switch/switching-entities/switching-entity/uft-mode'
-                )         
+                cps_attr='base-switch/switching-entities/switching-entity/uft-mode'
+                )
+         ]
+
+hash_attrs = [
+         Struct(option='--lag-non-ip-hash-fields',
+                help='Frame fields for LAG non-IP hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['lag-non-ip']
+                ),
+         Struct(option='--lag-ipv4-fields',
+                help='Frame fields for LAG IPv4 hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['lag-ipv4']
+                ),
+         Struct(option='--lag-ipv4-in-ipv4-fields',
+                help='Frame fields for LAG IPv4 in IPv4 hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['lag-ipv4-in-ipv4']
+                ),
+         Struct(option='--lag-ipv6-fields',
+                help='Frame fields for LAG IPv6 hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['lag-ipv6']
+                ),
+         Struct(option='--ecmp-non-ip-hash-fields',
+                help='Frame fields for ECMP non-IP hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['ecmp-non-ip']
+                ),
+         Struct(option='--ecmp-ipv4-fields',
+                help='Frame fields for ECMP IPv4 hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['ecmp-ipv4']
+                ),
+         Struct(option='--ecmp-ipv4-in-ipv4-fields',
+                help='Frame fields for ECMP IPv4 in IPv4 hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['ecmp-ipv4-in-ipv4']
+                ),
+         Struct(option='--ecmp-ipv6-fields',
+                help='Frame fields for ECMP IPv6 hash; comma-separated list of ' + ','.join(hash_fields_map.keys()),
+                metavar='FIELDS',
+                action=Hash_Fields_Action,
+                cps_attr='base-traffic-hash/entry',
+                traffic_type=hash_traffic_type_map['ecmp-ipv6']
+                )
          ]
 
 db_attrs = [Struct(option='--next-profile',
                    help='Switch profile used at next boot',
                    metavar='PROFILE',
                    action=Switch_Profile_Action,
-	           cps_attr='base-switch/switching-entities/switching-entity/switch-profile',
+                   cps_attr='base-switch/switching-entities/switching-entity/switch-profile',
                    )
            ]
 
@@ -221,30 +291,56 @@ for x in attrs + db_attrs:
     if hasattr(x, 'action'):
         extra['action'] = x.action
     parser.add_argument(x.option, help=x.help, type=getattr(x, 'type', str), **extra)
+
+for x in hash_attrs:
+    if not cps_get('target', 'base-traffic-hash/entry', {'base-traffic-hash/entry/obj-type': x.traffic_type}):
+        continue
+    extra = {}
+    if hasattr(x, 'metavar'):
+        extra['metavar'] = x.metavar
+    if hasattr(x, 'map'):
+        extra['choices'] = x.map.keys()
+    if hasattr(x, 'action'):
+        extra['action'] = x.action
+    parser.add_argument(x.option, help=x.help, type=getattr(x, 'type', str), **extra)
+
 args = parser.parse_args()
 
-d = {'base-switch/switching-entities/switching-entity/switch-id': 0}
-for x in attrs:
-    a = getattr(args, x.option[2:].replace('-', '_'), None)
-    if a is None:
+data = {'base-switch/switching-entities/switching-entity/switch-id': 0}
+hash_data = {}
+for x in attrs + hash_attrs:
+    argument = getattr(args, x.option[2:].replace('-', '_'), None)
+    if argument is None:
         continue
-    d[x.cps_attr] = x.map[a] if hasattr(x, 'map') else a
+    if hasattr(x, 'traffic_type'):
+        hash_data[x.cps_attr] = (x.map[argument] if hasattr(x, 'map') else argument, x.traffic_type)
+    else:
+        data[x.cps_attr] = x.map[argument] if hasattr(x, 'map') else argument
 
-if not cps_set('base-switch/switching-entities/switching-entity', 'target', d):
-    print  >> sys.stderr, 'Failed to set switch configuration'
+if bool(data):
+    if not cps_set('base-switch/switching-entities/switching-entity', 'target', data):
+        print >> sys.stderr, 'Failed to set switch configuration'
 
-d = {'base-switch/switching-entities/switching-entity/switch-id': 0}
+if bool(hash_data):
+    for update in hash_data.items():
+        update[1][0][:] = [hash_fields_map[x] for x in update[1][0]]  # map text to integers
+        if not cps_set('base-traffic-hash/entry',
+                       'target',
+                       {'base-traffic-hash/entry/obj-type': update[1][1], 'base-traffic-hash/entry/std-hash-field': update[1][0]}):
+            print >> sys.stderr, 'Failed to set switch configuration'
+
+data = {'base-switch/switching-entities/switching-entity/switch-id': 0}
 for x in db_attrs:
-    a = getattr(args, x.option[2:].replace('-', '_'), None)
-    if a is None:
+    argument = getattr(args, x.option[2:].replace('-', '_'), None)
+    if argument is None:
         continue
-    d[x.cps_attr] = x.map[a] if hasattr(x, 'map') else a
+    data[x.cps_attr] = x.map[argument] if hasattr(x, 'map') else argument
 
 cps_obj = cps_object.CPSObject('base-switch/switching-entities/switching-entity',
                                qual='target',
-                               data=d
+                               data=data
                                )
 cps.set_ownership_type(cps_obj.get_key(), 'db')
 cps_obj.set_property('db', True)
 if not cps_utils.CPSTransaction([('set', cps_obj.get())]).commit():
-    print  >> sys.stderr, 'Failed to set switch configuration'
+    print >> sys.stderr, 'Failed to set switch configuration'
